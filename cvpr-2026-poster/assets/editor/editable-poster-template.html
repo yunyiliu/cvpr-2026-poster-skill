@@ -156,9 +156,9 @@
     box-shadow: 0 2mm 6mm rgba(0, 0, 0, 0.18);
   }
   .logos-left img {
-    height: 80mm;
+    height: 60mm;
     width: auto;
-    max-width: 220mm;
+    max-width: 180mm;
     object-fit: contain;
   }
   .logos-right img {
@@ -372,7 +372,8 @@
 <div id="root"></div>
 <script>
 const EMBEDDED_CONFIG = __POSTER_CONFIG__;
-const LS_KEY = "cvpr-2026-poster-config";
+const LS_KEY = "cvpr-2026-poster-config-v2";
+try { localStorage.removeItem("cvpr-2026-poster-config"); } catch (e) {}
 
 const deepClone = (obj) => JSON.parse(JSON.stringify(obj));
 function loadStoredConfig() {
