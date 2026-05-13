@@ -134,7 +134,12 @@
     align-items: center;
     gap: 6mm;
   }
-  .logos-left { justify-content: flex-start; }
+  .logos-left {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 5mm;
+  }
   .logos-right {
     justify-content: flex-end;
     gap: 8mm;
@@ -156,9 +161,9 @@
     box-shadow: 0 2mm 6mm rgba(0, 0, 0, 0.18);
   }
   .logos-left img {
-    height: 60mm;
+    height: 45mm;
     width: auto;
-    max-width: 180mm;
+    max-width: 220mm;
     object-fit: contain;
   }
   .logos-right img {
