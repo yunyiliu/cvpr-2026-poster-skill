@@ -26,13 +26,15 @@ Use the skill in three phases:
 
 1. Create or organize a poster workspace.
 2. Fill `poster_brief.md` with paper facts, figures, links, style constraints, and institution logos.
-3. Ask the agent to turn that brief into `poster/index.html`, `poster/poster-config.json`, and poster-specific writing.
+3. Run `scripts/sync_poster_from_brief.py` to seed `poster/index.html` and `poster/poster-config.json`.
+4. Ask the agent to refine the generated poster, not start from scratch.
 
 Typical prompts:
 
 - `Use $cvpr-2026-poster to turn my paper into a CVPR 2026 poster brief.`
 - `Use $cvpr-2026-poster to build a 4-column poster outline from my Overleaf folder and figures.`
 - `Use $cvpr-2026-poster to adapt the official CVPR 2026 template and prepare a print checklist.`
+- `Use $cvpr-2026-poster to refine the generated poster/index.html after I synced poster_brief.md.`
 
 ## Track and Size
 
@@ -99,6 +101,7 @@ The bundled HTML editor already supports layout editing. When filling it:
 - replace placeholder card content with paper-specific content
 - copy selected figures into `poster/figures/` and reference them from the HTML
 - keep the poster self-contained enough to open locally via `file://`
+- prefer refining the synced config over rebuilding the layout structure unless the existing scaffold is clearly wrong
 
 ## Template Adaptation
 
@@ -158,6 +161,12 @@ python3 scripts/init_poster_project.py --project-dir ./poster-workspace --track 
 ```
 
 The scaffold script will copy bundled official assets into the workspace when they are available for the selected track.
+
+After editing `poster_brief.md`, sync it with:
+
+```bash
+python3 scripts/sync_poster_from_brief.py --project-dir ./poster-workspace
+```
 
 ## Preflight
 

@@ -4,6 +4,51 @@ A reusable AI skill for turning a CVPR 2026 paper into an editable poster worksp
 
 The generated output is not just a brief. It includes a browser-editable `poster/index.html` plus planning files and print checks.
 
+## 3-Minute Quick Start
+
+If you just want the shortest path, do this:
+
+1. Clone the repo:
+
+```bash
+git clone https://github.com/yunyiliu/cvpr-2026-poster-skill.git
+cd cvpr-2026-poster-skill
+```
+
+2. Create a workspace:
+
+```bash
+python3 cvpr-2026-poster/scripts/init_poster_project.py \
+  --project-dir ./poster-workspace \
+  --track main \
+  --paper-id 12345 \
+  --title "Your Paper Title"
+```
+
+3. Put your assets here:
+
+- figures: `poster-workspace/assets/figures/`
+- school or lab logos: `poster-workspace/assets/logos/`
+
+4. Fill `poster-workspace/poster_brief.md`
+
+5. Sync the brief into the editable poster:
+
+```bash
+python3 cvpr-2026-poster/scripts/sync_poster_from_brief.py \
+  --project-dir ./poster-workspace
+```
+
+6. Open the editable poster:
+
+```bash
+open poster-workspace/poster/index.html
+```
+
+7. If you are using Codex or Claude Code, ask the agent to refine the generated poster.
+
+That is the main workflow. Everything else in this README is detail and optional customization.
+
 It is designed for two use cases:
 
 - `Codex` / OpenAI skill workflows
@@ -43,6 +88,7 @@ The skill now ships with bundled official assets:
 - `cvpr-2026-poster/assets/official/templates/CVPR MAIN & FINDINGS Poster Template.pptx`
 - `cvpr-2026-poster/assets/official/templates/CVPR Workshop ONLY Poster Template.pptx`
 - `cvpr-2026-poster/assets/official/logos/CVPR_Logo2_Denver 2026_Color.eps`
+- `cvpr-2026-poster/assets/official/logos/CVPR_Logo2_Denver_2026_Preview.svg`
 
 When the agent looks for style assets, use this priority:
 
@@ -88,7 +134,8 @@ cvpr-2026-poster/
 │   ├── poster-brief-template.md
 │   └── print-checklist.md
 └── scripts/
-    └── init_poster_project.py
+    ├── init_poster_project.py
+    └── sync_poster_from_brief.py
 ```
 
 ## Install
@@ -175,7 +222,13 @@ python3 cvpr-2026-poster/scripts/init_poster_project.py \
   --title "Your Paper Title"
 ```
 
-In that case, this repo acts as a poster-planning template and checklist generator, but the actual `skill` behavior will not be available unless you load it into a supported agent environment.
+In that case, you can still use:
+
+- `init_poster_project.py`
+- `sync_poster_from_brief.py`
+- `poster/index.html`
+
+So the editable poster workflow still works. The only missing part is agent-assisted refinement from Codex or Claude Code.
 
 ## Usage
 
@@ -231,7 +284,47 @@ Recommended materials:
 - your school, lab, or company logos in `assets/logos/`
 If you do not provide a template, the skill will use the bundled official template for the selected track by default.
 
-### 3. Ask the agent to use the skill
+Recommended figure filenames for auto-fill:
+
+- `overview.png` or `method.png`
+- `results.png`
+- `qualitative.png`
+
+The sync script looks for these names first when filling the editable poster cards.
+
+### 3. Fill `poster_brief.md`
+
+At minimum, fill these fields:
+
+- `Title`
+- `Authors`
+- `Affiliations`
+- `QR target`
+- `One-sentence takeaway`
+- `Problem`
+- `Core idea`
+- `Main result`
+- `Method bullets`
+- `Results bullets`
+- `Conclusion bullets`
+
+### 4. Sync the brief into the editable poster
+
+Run:
+
+```bash
+python3 cvpr-2026-poster/scripts/sync_poster_from_brief.py \
+  --project-dir ./poster-workspace
+```
+
+This updates:
+
+- `poster/poster-config.json`
+- `poster/index.html`
+- copied user logos under `poster/logos/`
+- copied displayable figures under `poster/figures/`
+
+### 5. Ask the agent to use the skill
 
 Use one of these prompts:
 
@@ -247,7 +340,7 @@ Use $cvpr-2026-poster to build a 4-column poster plan from my Overleaf folder an
 Use $cvpr-2026-poster to adapt the official CVPR 2026 template and prepare a print checklist.
 ```
 
-### 4. What the skill should produce
+### 6. What the skill should produce
 
 The expected outputs are:
 
@@ -261,7 +354,7 @@ The expected outputs are:
 - automatic use of the bundled official template when no override is supplied
 - a generated `poster/index.html` visual editor with room for your institution logos
 
-### 5. Edit and export the poster
+### 7. Edit and export the poster
 
 Open the generated poster directly in your browser:
 
@@ -274,10 +367,22 @@ The editor is meant for layout iteration:
 - resize columns
 - resize card heights
 - move cards between columns
+- load a pasted config JSON
 - save or copy the current layout config
 - export the final result to `PDF`
 
 The planning files still matter, but the repo now also ships an actual editable poster layer.
+
+### 8. Smallest possible test
+
+If you want to test quickly before using your real paper:
+
+1. Run `init_poster_project.py`
+2. Edit only `Title`, `Authors`, `Affiliations`, `Problem`, and `Core idea` in `poster_brief.md`
+3. Run `sync_poster_from_brief.py`
+4. Open `poster/index.html`
+
+If that works, the repo is installed correctly.
 
 ## Recommended inputs
 

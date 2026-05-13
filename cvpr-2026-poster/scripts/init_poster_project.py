@@ -95,8 +95,16 @@ def build_poster_brief(args: argparse.Namespace, spec: dict[str, str]) -> str:
 
 - Short abstract, 2 to 3 sentences:
 - Method bullets:
+  - 
+  - 
+  - 
 - Results bullets:
+  - 
+  - 
+  - 
 - Conclusion bullets:
+  - 
+  - 
 - Key equations, optional:
 
 ## Must-have figures
@@ -110,7 +118,11 @@ def build_poster_brief(args: argparse.Namespace, spec: dict[str, str]) -> str:
 
 - Main table source:
 - Metrics to emphasize:
+  - 
+  - 
 - Baselines to include:
+  - 
+  - 
 
 ## Style
 

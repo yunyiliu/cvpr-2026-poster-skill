@@ -327,20 +327,36 @@
   <button id="preview-toggle" class="secondary">Preview</button>
   <button id="font-down" class="secondary">A-</button>
   <button id="font-up" class="secondary">A+</button>
+  <button id="load-config" class="secondary">Load Config</button>
   <button id="save-config">Save</button>
   <button id="copy-config">Copy Config</button>
   <button id="reset-config" class="secondary">Reset</button>
 </div>
 <div id="root"></div>
 <script>
-const INITIAL_CONFIG = __POSTER_CONFIG__;
+const EMBEDDED_CONFIG = __POSTER_CONFIG__;
+const LS_KEY = "cvpr-2026-poster-config";
 
 const deepClone = (obj) => JSON.parse(JSON.stringify(obj));
-let state = deepClone(INITIAL_CONFIG);
-const defaultState = deepClone(INITIAL_CONFIG);
+function loadStoredConfig() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (error) {
+    return null;
+  }
+}
+let state = deepClone(loadStoredConfig() || EMBEDDED_CONFIG);
+const defaultState = deepClone(EMBEDDED_CONFIG);
 let dragCardId = null;
 
 const mm = (value) => `${value}mm`;
+
+function persistState() {
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify(state));
+  } catch (error) {}
+}
 
 function contentWidthMm() {
   const gap = state.gapMm;
@@ -356,6 +372,13 @@ function ensureColumnWidths() {
   state.columns.forEach((column) => {
     column.widthMm = Math.max(140, Number((column.widthMm * scale).toFixed(1)));
   });
+}
+
+function normalizeLogos(logos) {
+  return (logos || []).filter((logo) => logo && logo.src).map((logo) => ({
+    src: logo.src,
+    alt: logo.alt || "logo",
+  }));
 }
 
 function applyPosterDimensions() {
@@ -580,17 +603,63 @@ function render() {
   root.innerHTML = "";
   renderHeader(root);
   renderColumns(root);
+  persistState();
   fitPosterToViewport();
 }
 
 window.posterAPI = {
   getConfig: () => deepClone(state),
-  resetLayout: () => { state = deepClone(defaultState); render(); },
+  exportConfig: () => JSON.stringify(state, null, 2),
+  importConfig: (config) => {
+    const next = typeof config === "string" ? JSON.parse(config) : config;
+    state = deepClone(next);
+    render();
+  },
+  resetLayout: () => {
+    state = deepClone(defaultState);
+    localStorage.removeItem(LS_KEY);
+    render();
+  },
   setFontScale: (scale) => { state.fontScale = scale; render(); },
+  getLayout: () => ({
+    columns: deepClone(state.columns),
+    cardHeights: Object.fromEntries(Object.entries(state.cards).map(([id, card]) => [id, card.heightMm || null])),
+  }),
+  setHeader: (header) => {
+    if (header.title !== undefined) state.title = header.title;
+    if (header.authors !== undefined) state.authors = header.authors;
+    if (header.affiliations !== undefined) state.affiliations = header.affiliations;
+    if (header.badge !== undefined) state.badge = header.badge;
+    render();
+  },
+  setTitle: (title) => { state.title = title; render(); },
+  setAuthors: (authors) => { state.authors = authors; render(); },
+  setAffiliations: (affiliations) => { state.affiliations = affiliations; render(); },
+  setBadge: (badge) => { state.badge = badge; render(); },
+  setQr: (src, label) => {
+    state.qr = { src: src || "", label: label || "QR" };
+    render();
+  },
+  setLogos: (logos) => {
+    state.logos = normalizeLogos(logos);
+    render();
+  },
+  addLogo: (src, alt) => {
+    state.logos = normalizeLogos([...(state.logos || []), { src, alt }]);
+    render();
+  },
+  removeLogo: (src) => {
+    state.logos = (state.logos || []).filter((logo) => logo.src !== src);
+    render();
+  },
   setColumnWidth: (columnId, widthMm) => {
     const column = state.columns.find((item) => item.id === columnId);
     if (!column) return;
     column.widthMm = widthMm;
+    render();
+  },
+  setColumns: (columns) => {
+    state.columns = deepClone(columns);
     render();
   },
   setCardHeight: (cardId, heightMm) => {
@@ -598,8 +667,30 @@ window.posterAPI = {
     state.cards[cardId].heightMm = heightMm;
     render();
   },
+  setCardTitle: (cardId, title) => {
+    if (!state.cards[cardId]) return;
+    state.cards[cardId].title = title;
+    render();
+  },
+  setCardHtml: (cardId, html) => {
+    if (!state.cards[cardId]) return;
+    state.cards[cardId].html = html;
+    render();
+  },
+  setCardAccent: (cardId, accent) => {
+    if (!state.cards[cardId]) return;
+    state.cards[cardId].accent = accent;
+    render();
+  },
+  setCard: (cardId, patch) => {
+    if (!state.cards[cardId]) return;
+    state.cards[cardId] = { ...state.cards[cardId], ...patch };
+    render();
+  },
   moveCard,
   swapCards,
+  saveToLocalStorage: persistState,
+  clearLocalStorage: () => localStorage.removeItem(LS_KEY),
 };
 
 document.getElementById("preview-toggle").addEventListener("click", () => {
@@ -613,11 +704,19 @@ document.getElementById("font-up").addEventListener("click", () => {
   state.fontScale = Math.min(1.8, Number((state.fontScale + 0.05).toFixed(2)));
   render();
 });
+document.getElementById("load-config").addEventListener("click", () => {
+  const raw = window.prompt("Paste poster-config JSON");
+  if (!raw) return;
+  try {
+    window.posterAPI.importConfig(raw);
+  } catch (error) {
+    window.alert("Invalid JSON config.");
+  }
+});
 document.getElementById("save-config").addEventListener("click", saveConfigFile);
 document.getElementById("copy-config").addEventListener("click", copyConfig);
 document.getElementById("reset-config").addEventListener("click", () => {
-  state = deepClone(defaultState);
-  render();
+  window.posterAPI.resetLayout();
 });
 
 window.addEventListener("resize", fitPosterToViewport);
