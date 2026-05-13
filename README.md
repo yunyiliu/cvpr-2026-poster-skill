@@ -1,206 +1,140 @@
 # CVPR 2026 Poster Skill
 
-Turn a CVPR 2026 paper into a print-ready poster in minutes, not days.
+Turn a CVPR 2026 paper into a print-ready 84"×42" poster by chatting
+with an AI agent. No manual templating, no PowerPoint, no fighting
+with print dialogs.
 
-The skill scaffolds a workspace with:
-
-- LaTeX-extracted title, authors, affiliations, abstract, and figures
-- Auto-fetched institution logos (one per school)
-- A browser-editable HTML poster at the official CVPR 2026 size
-  (84"×42" Main / Findings, 42"×21" Workshop)
-- One-command export to print-ready PDF
-
-You can drag column widths, swap card positions, and resize cards
-directly in the browser. Anything an agent (Claude Code, Codex, etc.)
-can write into `poster_brief.md` flows through to the poster.
+This is a Claude Code / Codex **skill** — not a standalone CLI tool.
+You install it once into your agent, then talk to it in plain language.
 
 ---
 
 ## How to start
 
-You need Python 3 and Google Chrome installed.
+### 1. Install the skill (one time)
 
-### 1. Clone
+Drop the `cvpr-2026-poster/` folder of this repo into your agent's
+skills directory:
+
+**Claude Code** (recommended)
 
 ```bash
 git clone https://github.com/yunyiliu/cvpr-2026-poster-skill.git
-cd cvpr-2026-poster-skill
+ln -s "$(pwd)/cvpr-2026-poster-skill/cvpr-2026-poster" ~/.claude/skills/cvpr-2026-poster
 ```
 
-### 2. Create a workspace
+Restart Claude Code. The skill appears as `cvpr-2026-poster` in the
+available-skills list.
 
-```bash
-python3 cvpr-2026-poster/scripts/init_poster_project.py \
-  --project-dir ./poster-workspace \
-  --track main
-```
+**Codex** or other agents: copy the same `cvpr-2026-poster/` folder
+into your agent's skill location (depends on the tool).
 
-`--track` is one of `main`, `findings`, or `workshop`.
+### 2. Talk to your agent
 
-### 3. Auto-fill the brief from your LaTeX source
+That's it. Examples:
 
-```bash
-python3 cvpr-2026-poster/scripts/fill_brief_from_latex.py \
-  --project-dir ./poster-workspace \
-  --latex-dir /path/to/overleaf \
-  --copy-figures
-```
+> Use cvpr-2026-poster to build a poster from my Overleaf folder at
+> `/Users/me/papers/sat-rrg/`. Auto-fetch institution logos.
 
-If your main file is not auto-detected, add `--main-tex camera_ready.tex`.
+> Use cvpr-2026-poster to refine the generated poster — make the
+> method card use a side-by-side figure/text layout and shrink the
+> conference logo a bit.
 
-### 4. Edit `poster-workspace/poster_brief.md`
+> Use cvpr-2026-poster to export the final PDF for printing.
 
-Fill in (or trim) the story bullets, method bullets, results bullets,
-the metrics table, and **institution websites** (one URL per school,
-in the same order as `Affiliations` — these are used to auto-fetch
-logos).
+The agent will scaffold the workspace, extract content from your
+LaTeX source, fetch logos, populate the editable HTML, and run the
+export — all from one conversation.
 
-### 5. Sync the brief into the editable poster
+### 3. Open the poster in a browser to fine-tune
 
-```bash
-python3 cvpr-2026-poster/scripts/sync_poster_from_brief.py \
-  --project-dir ./poster-workspace \
-  --fetch-logos-if-missing
-```
-
-This generates `poster/index.html` and `poster/poster-config.json`,
-copies figures and logos into place, and fetches institution logos
-from their websites if you have not added any yet.
-
-### 6. Open and edit in the browser
+The agent gives you a `poster-workspace/poster/index.html`. Open it:
 
 ```bash
 open poster-workspace/poster/index.html
 ```
 
-In the editor you can:
+You can:
 
-- Drag the divider between columns to change column widths
-- Drag the divider between cards to change card heights
-- Drag a card's `◆` handle onto a drop zone, or click two handles
-  in sequence, to move or swap cards
+- Drag column dividers to change column widths
+- Drag horizontal dividers to change card heights
+- Drag a card's `◆` handle (or click two handles in sequence) to
+  swap card positions
 - Use `A+` / `A-` to scale all fonts globally
-- Click **Save** to download the current `poster-config.json` (your
-  layout edits live in browser localStorage until you do this)
+- Click **Save** to download the current layout — then tell the
+  agent to bake it into the final PDF
 
-If you are using Claude Code or Codex, just tell the agent what you
-want changed and it will edit the brief or call `posterAPI` on the
-running editor.
-
-### 7. Export to PDF
-
-After clicking **Save** in the editor, run:
-
-```bash
-cd poster-workspace
-bash bake_and_export.sh
-```
-
-This will:
-
-1. Pick up the newest `poster-config.json` from `~/Downloads/`
-2. Re-embed it into `poster/index.html`
-3. Run headless Chrome to produce `poster.pdf` at the exact poster size
-
-Pass an explicit path if the JSON is elsewhere:
-
-```bash
-bash bake_and_export.sh /path/to/poster-config.json
-```
-
-If you have not changed layout in the browser since the last sync,
-skip the bake step:
-
-```bash
-bash export_pdf.sh
-```
-
-Verify the PDF dimensions — for a Main / Findings poster the page
-should be exactly **84.01" × 42.01"**.
+Or just describe what you want changed in chat — the agent will
+make the edit for you.
 
 ---
 
-## What is in the workspace
+## What you need
+
+- Google Chrome (for the PDF export step)
+- Python 3 (preinstalled on macOS and most Linux distros)
+
+That's all. The skill ships the rest:
+
+- LaTeX extractor
+- Institution-logo auto-fetcher
+- Editable HTML poster scaffold
+- Headless-Chrome PDF exporter at the exact poster size
+- Official CVPR 2026 Denver logo and template
+
+---
+
+## What gets created
+
+A typical workspace looks like:
 
 ```
 poster-workspace/
-├── poster_brief.md         ← you edit this
-├── poster_outline.md       ← optional planning notes
-├── print_checklist.md      ← preflight before sending to the printer
-├── assets/
-│   ├── figures/            ← copies of figures referenced in the paper
-│   └── logos/              ← school / lab logos (user-supplied or fetched)
+├── poster_brief.md         ← human-readable summary of paper content
 ├── poster/
 │   ├── index.html          ← the editable poster, open in a browser
 │   ├── poster-config.json  ← serialized layout + content
 │   ├── figures/            ← display copies of figures
 │   └── logos/
-│       ├── user/           ← school logos (rendered top-left of header)
-│       └── official/       ← CVPR conference logo (rendered top-right)
+│       ├── user/           ← school logos (top-left)
+│       └── official/       ← CVPR conference logo (top-right)
+├── assets/
+│   ├── figures/            ← original figures from the LaTeX project
+│   └── logos/              ← school / lab logos (user or auto-fetched)
 ├── references/
 │   └── latex-extract.md    ← summary of what was pulled from LaTeX
-├── export_pdf.sh           ← headless-Chrome PDF export
-└── bake_and_export.sh      ← bake current layout, then export
+├── export_pdf.sh           ← one-command headless-Chrome PDF export
+└── bake_and_export.sh      ← bake current browser layout, then export
 ```
 
 ---
 
-## Programmatic editing from the agent
+## CVPR 2026 size reference
 
-While the poster is open in the browser, an agent can call methods on
-`window.posterAPI` to make targeted edits without a full sync. Useful
-endpoints:
+| Track | Poster size | Aspect ratio |
+|-------|-------------|--------------|
+| Main / Findings | 84" × 42" (2134 × 1067 mm) | 2 : 1 landscape |
+| Workshop | 42" × 21" (1067 × 533 mm) | 2 : 1 landscape |
 
-- `setCardHtml(cardId, html)` — replace a card's body
-- `setCardTitle(cardId, title)` — rename a card
-- `setCardAccent(cardId, color)` — recolor a card's top accent bar
-- `moveCard(cardId, columnId, index)` — relocate a card
-- `swapCards(a, b)` — swap two cards
-- `setColumns(columns)` — restructure the column layout
-- `setLogos([...])` / `setConferenceLogos([...])` — replace logos
-- `setHeader({ title, authors, affiliations, badge })` — update the header
-- `getConfig()` / `exportConfig()` — read the current state
-- `resetLayout()` — discard local edits, revert to the embedded config
+Output is PDF, no bleed. The exporter honors the poster's `@page`
+declaration so the PDF page size matches the track exactly.
 
 ---
 
-## CVPR 2026 size and format reference
+## Without an AI agent
 
-| Track | Poster size | Aspect ratio | Notes |
-|-------|-------------|--------------|-------|
-| Main, Findings | 84" × 42" (2134 × 1067 mm) | 2 : 1 landscape | Default 4-column |
-| Workshop | 42" × 21" (1067 × 533 mm) | 2 : 1 landscape | Default 3-column |
+If you want to drive the scripts manually instead of through an agent,
+all of them are plain Python:
 
-Output should be PDF with **no bleed**. The bundled `export_pdf.sh`
-honors the poster's `@page` CSS so the page size matches exactly.
-
----
-
-## Why headless Chrome, not File → Print
-
-Chrome's print dialog defaults to Letter paper and silently downscales
-the 84"×42" poster unless you create a matching custom paper size in
-*System Settings → Printers & Scanners → Manage Custom Sizes*.
-`export_pdf.sh` uses Chrome in headless mode, which honors the
-`@page { size: 84in 42in; margin: 0; }` declaration directly.
-
----
-
-## Print-resolution notes
-
-Images are embedded at native pixel resolution. Vector content (text,
-SVG logos, gradients, table borders) stays sharp at any zoom.
-
-To maximize print sharpness:
-
-- Re-render figures from the paper at high DPI (matplotlib `dpi=300`,
-  TikZ → PDF → rasterize at 300 DPI, etc.)
-- Drop the high-res copies into `assets/figures/` and re-run
-  `sync_poster_from_brief.py`
-
-A figure that is 1600 px wide displayed at 200 mm prints at ~203 DPI,
-which is fine for poster viewing but below the 300 DPI threshold some
-printers prefer.
+```bash
+python3 cvpr-2026-poster/scripts/init_poster_project.py --project-dir ./poster-workspace --track main
+python3 cvpr-2026-poster/scripts/fill_brief_from_latex.py --project-dir ./poster-workspace --latex-dir /path/to/overleaf --copy-figures
+# edit poster-workspace/poster_brief.md
+python3 cvpr-2026-poster/scripts/sync_poster_from_brief.py --project-dir ./poster-workspace --fetch-logos-if-missing
+open poster-workspace/poster/index.html
+# (edit in browser, click Save when done)
+cd poster-workspace && bash bake_and_export.sh
+```
 
 ---
 
