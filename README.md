@@ -49,6 +49,14 @@ open poster-workspace/poster/index.html
 
 That is the main workflow. Everything else in this README is detail and optional customization.
 
+What the sync step now does automatically:
+
+- fills `poster/index.html`
+- fills `poster/poster-config.json`
+- copies displayable figures into `poster/figures/`
+- copies user logos into `poster/logos/`
+- generates a live QR image URL from `QR target`
+
 It is designed for two use cases:
 
 - `Codex` / OpenAI skill workflows
@@ -367,8 +375,10 @@ The editor is meant for layout iteration:
 - resize columns
 - resize card heights
 - move cards between columns
+- click one card handle, then another, to swap cards
 - load a pasted config JSON
 - save or copy the current layout config
+- inspect layout waste through `window.posterAPI.getWaste()`
 - export the final result to `PDF`
 
 The planning files still matter, but the repo now also ships an actual editable poster layer.

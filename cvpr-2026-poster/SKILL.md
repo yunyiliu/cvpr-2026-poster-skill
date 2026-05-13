@@ -94,6 +94,7 @@ The generated output should include:
 - `poster/poster-config.json` as the saved layout and content config
 - `poster/logos/` for conference and institution logos
 - `poster/figures/` for copied figures used by the poster
+- a generated QR image URL when `QR target` is present in `poster_brief.md`
 
 The bundled HTML editor already supports layout editing. When filling it:
 
@@ -102,6 +103,7 @@ The bundled HTML editor already supports layout editing. When filling it:
 - copy selected figures into `poster/figures/` and reference them from the HTML
 - keep the poster self-contained enough to open locally via `file://`
 - prefer refining the synced config over rebuilding the layout structure unless the existing scaffold is clearly wrong
+- use `window.posterAPI.getWaste()` when you need a quick measurement of figure-related whitespace
 
 ## Template Adaptation
 

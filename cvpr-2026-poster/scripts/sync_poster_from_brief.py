@@ -13,6 +13,7 @@ import json
 import re
 import shutil
 from pathlib import Path
+from urllib.parse import quote, urlparse
 
 from init_poster_project import TRACK_SPECS, write_editable_poster
 
@@ -104,6 +105,14 @@ def para_html(text: str, bold: bool = False) -> str:
     return f"<p>{body}</p>"
 
 
+def link_html(label: str, url: str) -> str:
+    if not url:
+        return ""
+    safe_url = escape_attr(url)
+    safe_label = escape_html(label)
+    return f"<p><b>{safe_label}:</b> <a href='{safe_url}' target='_blank' rel='noreferrer'>{safe_url}</a></p>"
+
+
 def figure_card_html(rel_path: str | None, caption: str, fallback_text: str) -> str:
     if rel_path:
         return (
@@ -137,6 +146,10 @@ def badge_for_track(track: str) -> str:
     if track == "workshop":
         return "CVPR 2026 Workshop"
     return "CVPR 2026 Main / Findings"
+
+
+def qr_service_url(target: str) -> str:
+    return f"https://api.qrserver.com/v1/create-qr-code/?size=320x320&data={quote(target, safe='')}"
 
 
 def copy_user_logos(project_dir: Path) -> list[str]:
@@ -228,8 +241,9 @@ def main() -> None:
 
     qr_target = get_value(sections, "Links", "QR target")
     if qr_target:
-        config["qr"]["label"] = "QR target set in poster_brief.md"
-        config["qr"]["src"] = ""
+        parsed = urlparse(qr_target)
+        config["qr"]["label"] = parsed.netloc or "Paper / Project"
+        config["qr"]["src"] = qr_service_url(qr_target)
 
     takeaway = get_value(sections, "Story", "One-sentence takeaway")
     problem = get_value(sections, "Story", "Problem")
@@ -311,12 +325,14 @@ def main() -> None:
         table_rows.append(config["cards"]["table"]["html"])
     config["cards"]["table"]["html"] = "".join(table_rows)
 
-    link_lines = [item for item in [f"Paper: {paper_link}" if paper_link else "", f"Code: {code_link}" if code_link else "", f"Demo: {demo_link}" if demo_link else "", f"QR target: {qr_target}" if qr_target else ""] if item]
     config["cards"]["conclusion"]["html"] = "".join(
         [
             bullet_html(conclusion_bullets or ["Add final takeaways here"]),
             para_html(conclusion),
-            "".join(para_html(item) for item in link_lines),
+            link_html("Paper", paper_link),
+            link_html("Code", code_link),
+            link_html("Demo", demo_link),
+            link_html("QR target", qr_target),
         ]
     )
 

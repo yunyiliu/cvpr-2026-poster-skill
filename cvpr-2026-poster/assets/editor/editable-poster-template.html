@@ -266,6 +266,14 @@
     cursor: grab;
     user-select: none;
   }
+  .card.swap-selected {
+    outline: 1.2mm solid rgba(241, 131, 43, 0.85);
+    outline-offset: -0.6mm;
+  }
+  .card.swap-selected .card-handle {
+    background: rgba(241, 131, 43, 0.2);
+    color: #cc6f18;
+  }
 
   .row-divider {
     height: 6mm;
@@ -349,6 +357,7 @@ function loadStoredConfig() {
 let state = deepClone(loadStoredConfig() || EMBEDDED_CONFIG);
 const defaultState = deepClone(EMBEDDED_CONFIG);
 let dragCardId = null;
+let swapCardId = null;
 
 const mm = (value) => `${value}mm`;
 
@@ -441,6 +450,7 @@ function createCard(cardId) {
   const card = state.cards[cardId];
   const el = document.createElement("section");
   el.className = `card ${card.heightMm ? "fixed-height" : "flex-grow"}`;
+  if (swapCardId === cardId) el.classList.add("swap-selected");
   el.dataset.cardId = cardId;
   el.style.setProperty("--card-accent", card.accent || "#1b5da2");
   if (card.heightMm) el.style.height = mm(card.heightMm);
@@ -452,11 +462,28 @@ function createCard(cardId) {
 
   el.querySelector(".card-handle").addEventListener("dragstart", () => {
     dragCardId = cardId;
+    swapCardId = null;
     document.querySelectorAll(".drop-zone").forEach((zone) => zone.classList.add("active"));
   });
   el.querySelector(".card-handle").addEventListener("dragend", () => {
     dragCardId = null;
     document.querySelectorAll(".drop-zone").forEach((zone) => zone.classList.remove("active"));
+  });
+  el.querySelector(".card-handle").addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (swapCardId === cardId) {
+      swapCardId = null;
+      render();
+      return;
+    }
+    if (swapCardId) {
+      swapCards(swapCardId, cardId);
+      swapCardId = null;
+      return;
+    }
+    swapCardId = cardId;
+    render();
   });
   return el;
 }
@@ -596,6 +623,39 @@ async function copyConfig() {
   await navigator.clipboard.writeText(JSON.stringify(state, null, 2));
 }
 
+function getWaste() {
+  const details = [];
+  let total = 0;
+  document.querySelectorAll(".card").forEach((card) => {
+    const cardId = card.dataset.cardId;
+    const figBox = card.querySelector(".fig-box");
+    const img = figBox ? figBox.querySelector("img") : null;
+    let wasteH = 0;
+    let wasteW = 0;
+    if (figBox && img) {
+      const boxRect = figBox.getBoundingClientRect();
+      const imgRect = img.getBoundingClientRect();
+      wasteH += Math.max(0, boxRect.height - imgRect.height);
+      wasteW += Math.max(0, boxRect.width - imgRect.width);
+    }
+    const body = card.querySelector(".card-body");
+    if (body) {
+      const bodySlack = Math.max(0, body.clientHeight - body.scrollHeight);
+      wasteH += bodySlack;
+    }
+    const pctBase = Math.max(1, card.getBoundingClientRect().height * card.getBoundingClientRect().width);
+    const pct = ((wasteH * card.getBoundingClientRect().width + wasteW * card.getBoundingClientRect().height) / pctBase) * 100;
+    total += wasteH + wasteW;
+    details.push({
+      card: cardId,
+      wasteH: Number(wasteH.toFixed(2)),
+      wasteW: Number(wasteW.toFixed(2)),
+      pct: Number(pct.toFixed(2)),
+    });
+  });
+  return { total: Number(total.toFixed(2)), details };
+}
+
 function render() {
   ensureColumnWidths();
   applyPosterDimensions();
@@ -625,6 +685,7 @@ window.posterAPI = {
     columns: deepClone(state.columns),
     cardHeights: Object.fromEntries(Object.entries(state.cards).map(([id, card]) => [id, card.heightMm || null])),
   }),
+  getWaste,
   setHeader: (header) => {
     if (header.title !== undefined) state.title = header.title;
     if (header.authors !== undefined) state.authors = header.authors;
@@ -660,6 +721,12 @@ window.posterAPI = {
   },
   setColumns: (columns) => {
     state.columns = deepClone(columns);
+    render();
+  },
+  setColumnCards: (columnId, cards) => {
+    const column = state.columns.find((item) => item.id === columnId);
+    if (!column) return;
+    column.cards = [...cards];
     render();
   },
   setCardHeight: (cardId, heightMm) => {
