@@ -53,6 +53,23 @@ cvpr-2026-poster/
 
 ## Install
 
+## Which tool should I use?
+
+This repo supports two different AI-agent environments:
+
+- `Codex`: use this if you work in the OpenAI Codex environment and your local skills live under `~/.codex/skills/`
+- `Claude Code`: use this if you work in Anthropic Claude Code and your local skills live under `.claude/skills/` or your Claude user skill directory
+
+Use only the install path for the tool you actually use. You do not need both.
+
+Important distinction:
+
+- terminal commands such as `git clone`, `cp`, and `python3 .../init_poster_project.py` are run in your shell
+- prompts such as `Use $cvpr-2026-poster ...` are typed inside the AI agent session after the skill is installed
+
+This repo does not require a special shell command like `codex cvpr-2026-poster` or `claude cvpr-2026-poster`.
+You install the skill first, then call it from inside your agent conversation.
+
 ### Codex
 
 Copy `cvpr-2026-poster/` into your Codex skills directory, for example:
@@ -61,7 +78,16 @@ Copy `cvpr-2026-poster/` into your Codex skills directory, for example:
 cp -R cvpr-2026-poster ~/.codex/skills/
 ```
 
-Then invoke it with a prompt such as:
+When to use this path:
+
+- you are already working in Codex
+- you want Codex to read your poster workspace and draft the brief or outline
+
+After copying the skill:
+
+1. start a new Codex session
+2. open the folder that contains your poster materials
+3. type a prompt such as:
 
 ```text
 Use $cvpr-2026-poster to turn my paper into a 4-column CVPR 2026 poster brief.
@@ -76,11 +102,40 @@ mkdir -p .claude/skills
 cp -R cvpr-2026-poster .claude/skills/
 ```
 
-Then invoke it with a prompt such as:
+When to use this path:
+
+- you are already working in Claude Code
+- you want Claude Code to use the skill while reading your paper files and figures
+
+After copying the skill:
+
+1. start a new Claude Code session
+2. open the project that contains your poster materials
+3. type a prompt such as:
 
 ```text
 Use the cvpr-2026-poster skill to adapt the official CVPR 2026 template to my paper.
 ```
+
+You can also usually say:
+
+```text
+Use $cvpr-2026-poster to build a CVPR 2026 poster outline from my files.
+```
+
+## If you are not using Codex or Claude Code
+
+You can still use the scaffold script by itself:
+
+```bash
+python3 cvpr-2026-poster/scripts/init_poster_project.py \
+  --project-dir ./poster-workspace \
+  --track main \
+  --paper-id 12345 \
+  --title "Your Paper Title"
+```
+
+In that case, this repo acts as a poster-planning template and checklist generator, but the actual `skill` behavior will not be available unless you load it into a supported agent environment.
 
 ## Usage
 
