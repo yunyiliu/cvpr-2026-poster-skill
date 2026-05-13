@@ -96,19 +96,21 @@
     color: #fff;
     padding: 14mm var(--pad) 12mm;
     display: grid;
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: 260mm 1fr 360mm;
     align-items: center;
     gap: 12mm;
   }
   .header-center {
     text-align: center;
     min-width: 0;
+    max-width: 1400mm;
+    margin: 0 auto;
   }
   .title {
-    font-size: calc(120pt * var(--font-scale));
-    line-height: 1.04;
+    font-size: calc(95pt * var(--font-scale));
+    line-height: 1.05;
     font-weight: 850;
-    margin: 0 0 7mm;
+    margin: 0 0 6mm;
     letter-spacing: -0.01em;
   }
   .meta {
@@ -377,8 +379,11 @@
 <div id="root"></div>
 <script>
 const EMBEDDED_CONFIG = __POSTER_CONFIG__;
-const LS_KEY = "cvpr-2026-poster-config-v2";
-try { localStorage.removeItem("cvpr-2026-poster-config"); } catch (e) {}
+const LS_KEY = "cvpr-2026-poster-config-v3";
+try {
+  localStorage.removeItem("cvpr-2026-poster-config");
+  localStorage.removeItem("cvpr-2026-poster-config-v2");
+} catch (e) {}
 
 const deepClone = (obj) => JSON.parse(JSON.stringify(obj));
 function loadStoredConfig() {
