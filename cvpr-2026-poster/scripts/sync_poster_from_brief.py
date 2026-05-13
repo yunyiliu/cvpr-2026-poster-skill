@@ -316,10 +316,12 @@ def main() -> None:
     config["logos"] = user_logos
 
     qr_target = get_value(sections, "Links", "QR target")
-    if qr_target:
+    if qr_target and not qr_target.startswith("[") and "://" in qr_target:
         parsed = urlparse(qr_target)
         config["qr"]["label"] = parsed.netloc or "Paper / Project"
         config["qr"]["src"] = qr_service_url(qr_target)
+    else:
+        config["qr"] = {"src": "", "label": "Paper / Project"}
 
     takeaway = get_value(sections, "Story", "One-sentence takeaway")
     problem = get_value(sections, "Story", "Problem")

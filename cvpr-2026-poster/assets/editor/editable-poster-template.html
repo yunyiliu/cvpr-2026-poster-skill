@@ -105,25 +105,26 @@
     min-width: 0;
   }
   .title {
-    font-size: calc(56pt * var(--font-scale));
-    line-height: 1.06;
+    font-size: calc(140pt * var(--font-scale));
+    line-height: 1.04;
     font-weight: 850;
-    margin: 0 0 5mm;
+    margin: 0 0 8mm;
+    letter-spacing: -0.01em;
   }
   .meta {
-    font-size: calc(24pt * var(--font-scale));
-    line-height: 1.32;
+    font-size: calc(56pt * var(--font-scale));
+    line-height: 1.28;
     opacity: 0.96;
     white-space: pre-line;
-    margin-bottom: 1.5mm;
+    margin-bottom: 3mm;
   }
   .badge {
     display: inline-block;
-    margin-top: 4mm;
-    padding: 3mm 7mm;
+    margin-top: 6mm;
+    padding: 4mm 10mm;
     border-radius: 999px;
-    border: 1.2mm solid rgba(255, 255, 255, 0.4);
-    font-size: calc(20pt * var(--font-scale));
+    border: 1.6mm solid rgba(255, 255, 255, 0.45);
+    font-size: calc(40pt * var(--font-scale));
     font-weight: 800;
     white-space: nowrap;
   }
@@ -138,7 +139,13 @@
     justify-content: flex-end;
     gap: 8mm;
   }
-  .logos-left .logo-pill,
+  .logos-left .logo-pill {
+    background: transparent;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
   .logos-right .logo-pill {
     background: #ffffff;
     border-radius: 4mm;
@@ -149,30 +156,30 @@
     box-shadow: 0 2mm 6mm rgba(0, 0, 0, 0.18);
   }
   .logos-left img {
-    max-height: 38mm;
-    max-width: 90mm;
+    max-height: 90mm;
+    max-width: 200mm;
     object-fit: contain;
   }
   .logos-right img {
-    max-height: 50mm;
-    max-width: 130mm;
+    max-height: 120mm;
+    max-width: 300mm;
     object-fit: contain;
   }
   .qr-block {
     text-align: center;
-    margin-left: 4mm;
+    margin-left: 6mm;
   }
   .qr-block img {
-    width: 38mm;
-    height: 38mm;
+    width: 90mm;
+    height: 90mm;
     object-fit: cover;
-    border-radius: 2mm;
+    border-radius: 3mm;
     background: #fff;
-    padding: 1.5mm;
+    padding: 2mm;
   }
   .qr-label {
-    margin-top: 1.5mm;
-    font-size: calc(14pt * var(--font-scale));
+    margin-top: 3mm;
+    font-size: calc(32pt * var(--font-scale));
     font-weight: 700;
     color: rgba(255, 255, 255, 0.95);
   }
@@ -231,21 +238,21 @@
   .card.flex-grow { flex: 1 1 0; }
   .card.fixed-height { flex: 0 0 auto; }
   .card h2 {
-    margin: 0 0 4mm;
-    font-size: calc(32pt * var(--font-scale));
-    line-height: 1.1;
+    margin: 0 0 6mm;
+    font-size: calc(80pt * var(--font-scale));
+    line-height: 1.05;
     font-weight: 850;
     color: var(--card-accent, #1b5da2);
   }
   .card-body {
     min-height: 0;
-    font-size: calc(22pt * var(--font-scale));
-    line-height: 1.35;
+    font-size: calc(48pt * var(--font-scale));
+    line-height: 1.3;
     color: var(--text);
   }
-  .card-body p { margin: 0 0 4mm; }
-  .card-body ul { margin: 0; padding-left: 8mm; }
-  .card-body li { margin: 0 0 3mm; }
+  .card-body p { margin: 0 0 6mm; }
+  .card-body ul { margin: 0; padding-left: 14mm; }
+  .card-body li { margin: 0 0 5mm; }
   .card-body img {
     max-width: 100%;
     max-height: 100%;
@@ -256,7 +263,7 @@
   .card-body table {
     width: 100%;
     border-collapse: collapse;
-    font-size: calc(18pt * var(--font-scale));
+    font-size: calc(40pt * var(--font-scale));
   }
   .card-body th,
   .card-body td {
@@ -445,12 +452,15 @@ function renderHeader(root) {
     leftLogos.appendChild(pill);
   });
 
+  const supify = (s) => String(s || "")
+    .replace(/\^\{([^}]+)\}/g, "<sup>$1</sup>")
+    .replace(/\^(\d+)/g, "<sup>$1</sup>");
   const center = document.createElement("div");
   center.className = "header-center";
   center.innerHTML = `
     <div class="title">${state.title}</div>
-    <div class="meta">${state.authors}</div>
-    <div class="meta">${state.affiliations}</div>
+    <div class="meta">${supify(state.authors)}</div>
+    <div class="meta">${supify(state.affiliations)}</div>
     <div class="badge">${state.badge}</div>
   `;
 
