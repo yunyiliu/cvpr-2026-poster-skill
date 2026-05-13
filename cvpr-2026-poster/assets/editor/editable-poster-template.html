@@ -461,7 +461,7 @@ function renderHeader(root) {
     <div class="title">${state.title}</div>
     <div class="meta">${supify(state.authors)}</div>
     <div class="meta">${supify(state.affiliations)}</div>
-    <div class="badge">${state.badge}</div>
+    ${state.badge ? `<div class="badge">${state.badge}</div>` : ""}
   `;
 
   const right = document.createElement("div");
