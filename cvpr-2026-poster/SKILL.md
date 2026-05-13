@@ -1,0 +1,125 @@
+---
+name: cvpr-2026-poster
+description: Use when the user needs to plan, draft, or refine a CVPR 2026 poster under the official CVPR 2026 size, layout, and printing constraints, including adapting the official template, turning a paper into a 5 to 10 minute poster story, or preparing a print-ready poster brief and checklist.
+---
+
+# CVPR 2026 Poster
+
+## Overview
+
+This skill turns a paper, a few figures, and optional template assets into a CVPR 2026 poster brief, section plan, and print checklist. Prefer it for Main, Findings, or Workshop posters when the work must follow official CVPR 2026 poster sizing and printing rules.
+
+## Workflow
+
+1. Confirm the track and use the correct official size.
+2. Gather the minimum poster inputs before writing any layout text.
+3. Compress the paper into a 5 to 10 minute poster story instead of copying the paper.
+4. Default to large figures and sparse text.
+5. Use the official template as a style reference when available.
+6. Preflight the print export before calling the poster done.
+
+## How To Use This Skill
+
+Use the skill in three phases:
+
+1. Create or organize a poster workspace.
+2. Fill `poster_brief.md` with paper facts, figures, links, and style constraints.
+3. Ask the agent to turn that brief into a section plan and poster-specific writing.
+
+Typical prompts:
+
+- `Use $cvpr-2026-poster to turn my paper into a CVPR 2026 poster brief.`
+- `Use $cvpr-2026-poster to build a 4-column poster outline from my Overleaf folder and figures.`
+- `Use $cvpr-2026-poster to adapt the official CVPR 2026 template and prepare a print checklist.`
+
+## Track and Size
+
+Read [references/cvpr-2026-spec.md](references/cvpr-2026-spec.md) before making any poster-specific recommendation.
+
+Default assumptions:
+
+- `main` and `findings`: `84in x 42in`, landscape, aspect ratio `2:1`
+- `workshop`: `42in x 21in`, landscape, aspect ratio `2:1`
+- default layout: `4` columns for method-heavy papers, `3` columns when the central figure or result panels are unusually wide
+- print export: `PDF`
+- no bleed
+
+## Minimum Inputs
+
+Ask for or infer these before drafting:
+
+- paper source, preferably Overleaf or LaTeX
+- final title, authors, affiliations, and paper ID
+- 3 to 6 must-have figures
+- one main quantitative table
+- a QR target link
+
+If the user has no project website, use one of these as the QR target:
+
+- arXiv page
+- GitHub repository
+- lab page
+- personal page
+- demo or video page
+
+## Story Compression
+
+Poster text should support a live explanation, not replace it.
+
+Aim for:
+
+- one-sentence takeaway near the title
+- 3 to 5 concise method bullets
+- 3 to 5 results bullets
+- 2 to 4 conclusion bullets
+- at most 1 to 2 equations unless the user explicitly wants a more technical poster
+
+For CVPR papers, a reliable default structure is:
+
+- `Problem / Motivation / Contribution`
+- `Method Overview`
+- `Key Mechanism or Ablation`
+- `Results / Qualitative Examples / Conclusion`
+
+## Template Adaptation
+
+If the user provides the official template as Google Slides, PowerPoint, or PDF:
+
+- treat it as a visual and spacing reference unless the user explicitly needs the final artifact to stay editable in Slides or PPT
+- preserve the conference-like header hierarchy, margins, whitespace, and logo placement
+- do not let the template force a text-heavy poster
+
+If the user references an official shared asset folder, ask them to export the needed files and place them in:
+
+- `references/` for templates and reference PDFs
+- `assets/logos/` for logos and conference marks
+
+If no template is provided, stay close to official guidance:
+
+- `3` or `4` columns
+- little text
+- a few large expressive figures
+
+## Output Files
+
+When building or organizing poster work, prefer these working files:
+
+- `poster_brief.md`
+- `poster_outline.md`
+- `print_checklist.md`
+
+You can scaffold them with:
+
+```bash
+python3 scripts/init_poster_project.py --project-dir ./poster-workspace --track main
+```
+
+## Preflight
+
+Before final export, read [references/print-checklist.md](references/print-checklist.md) and verify:
+
+- the track matches the final size
+- the export is `PDF`
+- no bleed is included
+- the job name uses full name and paper ID
+- the user is not about to miss a printing deadline or poster upload requirement

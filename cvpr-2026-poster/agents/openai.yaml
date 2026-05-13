@@ -1,0 +1,8 @@
+interface:
+  display_name: "CVPR 2026 Poster"
+  short_description: "Plan and prep CVPR 2026 posters"
+  default_prompt: "Use $cvpr-2026-poster to turn my paper into a CVPR 2026 poster brief and print checklist."
+
+policy:
+  allow_implicit_invocation: true
+
