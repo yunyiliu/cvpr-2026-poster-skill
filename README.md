@@ -13,59 +13,90 @@ You install it once into your agent, then talk to it in plain language.
 
 ### 1. Install the skill (one time)
 
-Drop the `cvpr-2026-poster/` folder of this repo into your agent's
-skills directory:
-
-**Claude Code** (recommended)
+**Claude Code**
 
 ```bash
 git clone https://github.com/yunyiliu/cvpr-2026-poster-skill.git
+mkdir -p ~/.claude/skills
 ln -s "$(pwd)/cvpr-2026-poster-skill/cvpr-2026-poster" ~/.claude/skills/cvpr-2026-poster
 ```
 
-Restart Claude Code. The skill appears as `cvpr-2026-poster` in the
-available-skills list.
+Start a new Claude Code session (existing sessions don't auto-pick-up
+new skills). The skill appears in the available-skills list as
+`cvpr-2026-poster`.
 
-**Codex** or other agents: copy the same `cvpr-2026-poster/` folder
-into your agent's skill location (depends on the tool).
+**Codex / other agents**: copy or symlink the same `cvpr-2026-poster/`
+folder into your agent's skill location — refer to that tool's docs
+for the exact path.
 
-### 2. Talk to your agent
+### 2. Ask the agent to build the poster
 
-That's it. Examples:
+In a new session, write a single message like:
 
-> Use cvpr-2026-poster to build a poster from my Overleaf folder at
-> `/path/to/your/overleaf-folder/`. Auto-fetch institution logos.
+> Use `$cvpr-2026-poster` to create a poster workspace from my Overleaf
+> folder at `/path/to/your/overleaf-folder/`. Fill the brief from
+> LaTeX, copy figures, auto-fetch institution logos, and sync the
+> editable poster.
 
-> Use cvpr-2026-poster to refine the generated poster — make the
-> method card use a side-by-side figure/text layout and shrink the
-> conference logo a bit.
+The agent will:
 
-> Use cvpr-2026-poster to export the final PDF for printing.
+- Run `init_poster_project.py` to scaffold the workspace
+- Run `fill_brief_from_latex.py` to extract your paper's title,
+  authors, affiliations, abstract, and figures
+- Run `sync_poster_from_brief.py` to populate the editable HTML, copy
+  figures into place, and fetch logos from your institutions' websites
+- Open the resulting `poster/index.html` for you to inspect
 
-The agent will scaffold the workspace, extract content from your
-LaTeX source, fetch logos, populate the editable HTML, and run the
-export — all from one conversation.
+If you have multiple institutions, list them in the same order as
+`Affiliations` in `poster_brief.md` and add one institution website
+per school. The agent does this automatically when the LaTeX is clear.
 
-### 3. Open the poster in a browser to fine-tune
+### 3. Iterate by talking to the agent
 
-The agent gives you a `poster-workspace/poster/index.html`. Open it:
+Once the poster is open in the browser, just describe edits in chat:
 
-```bash
-open poster-workspace/poster/index.html
-```
+> Make the Results card use a side-by-side figure/text layout, and
+> shrink the conference logo a bit.
 
-You can:
+> The Contributions card is too long — keep it to one lead sentence
+> and three bullets.
+
+> Move the Conclusion card to the bottom of the rightmost column.
+
+The agent will edit `poster-config.json` (and re-embed it into
+`index.html`) for you. Hard-refresh the browser tab to see the result.
+
+You can also edit in the browser directly:
 
 - Drag column dividers to change column widths
 - Drag horizontal dividers to change card heights
 - Drag a card's `◆` handle (or click two handles in sequence) to
   swap card positions
 - Use `A+` / `A-` to scale all fonts globally
-- Click **Save** to download the current layout — then tell the
-  agent to bake it into the final PDF
+- Click **Save** when you're happy — that downloads
+  `poster-config.json` to `~/Downloads/` with your layout
 
-Or just describe what you want changed in chat — the agent will
-make the edit for you.
+### 4. Export to a print-ready PDF
+
+After you click **Save** in the browser, in a terminal:
+
+```bash
+cd poster-workspace
+bash bake_and_export.sh
+```
+
+This picks up the saved `poster-config.json` from `~/Downloads/`,
+re-embeds it into `index.html`, and runs headless Chrome to produce
+`poster.pdf` at exactly **84.01" × 42.01"** (or the workshop size).
+
+If you have not touched the layout in the browser since the last
+agent edit, just run:
+
+```bash
+bash export_pdf.sh
+```
+
+Send `poster.pdf` directly to your printer.
 
 ---
 
