@@ -99,7 +99,7 @@
     color: #fff;
     padding: 14mm var(--pad) 12mm;
     display: grid;
-    grid-template-columns: 260mm 1fr 360mm;
+    grid-template-columns: 260mm 1fr 420mm;
     align-items: center;
     gap: 12mm;
   }
@@ -172,8 +172,8 @@
     object-position: left center;
   }
   .logos-right img {
-    max-height: 90mm;
-    max-width: 240mm;
+    max-height: 150mm;
+    max-width: 380mm;
     object-fit: contain;
   }
   .qr-block {
@@ -382,9 +382,9 @@
 <div id="root"></div>
 <script>
 const EMBEDDED_CONFIG = __POSTER_CONFIG__;
-const LS_KEY = "cvpr-2026-poster-config-v5";
+const LS_KEY = "cvpr-2026-poster-config-v6";
 try {
-  ["cvpr-2026-poster-config","cvpr-2026-poster-config-v2","cvpr-2026-poster-config-v3","cvpr-2026-poster-config-v4"]
+  ["cvpr-2026-poster-config","cvpr-2026-poster-config-v2","cvpr-2026-poster-config-v3","cvpr-2026-poster-config-v4","cvpr-2026-poster-config-v5"]
     .forEach((k) => localStorage.removeItem(k));
 } catch (e) {}
 
@@ -728,6 +728,10 @@ function renderSync() {
   root.innerHTML = "";
   renderHeader(root);
   renderColumns(root);
+  root.querySelectorAll("img").forEach((img) => {
+    if (!img.hasAttribute("decoding")) img.setAttribute("decoding", "async");
+    if (!img.hasAttribute("loading")) img.setAttribute("loading", "eager");
+  });
   fitPosterToViewport();
   persistStateDebounced();
 }
