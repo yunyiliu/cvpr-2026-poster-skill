@@ -355,6 +355,17 @@ def copy_bundled_assets(project_dir: Path, track: str, skill_dir: Path) -> tuple
                 if item.suffix.lower() in {".svg", ".png", ".jpg", ".jpeg", ".webp"}:
                     logo_paths.append(str(poster_target.relative_to(project_dir / "poster")))
 
+    # Copy PDF export helpers into the workspace root so users can run
+    # `bash export_pdf.sh` / `bash bake_and_export.sh` immediately.
+    export_dir = skill_dir / "assets" / "export"
+    if export_dir.exists():
+        for item in sorted(export_dir.iterdir()):
+            if item.is_file() and item.suffix == ".sh":
+                target = project_dir / item.name
+                shutil.copy2(item, target)
+                target.chmod(0o755)
+                copied.append(str(target.relative_to(project_dir)))
+
     return copied, logo_paths
 
 

@@ -535,6 +535,100 @@ The bundled references encode:
 6. Ask the agent to fill `poster/index.html`, `poster_brief.md`, and `poster_outline.md`.
 7. Use `print_checklist.md` before exporting the final PDF.
 
+## Export to PDF for printing
+
+Each generated workspace ships with two helper scripts that drive
+headless Chrome to produce a print-ready PDF at the exact poster size
+(84"×42" for Main / Findings, 42"×21" for Workshop). They expect Google
+Chrome installed at the macOS default path
+`/Applications/Google Chrome.app/`. Adjust the `CHROME=` line if you
+use a different binary.
+
+### Workflow
+
+1. Open `poster/index.html` in a browser and edit until it looks right.
+   When you drag column widths or card heights, those tweaks live in
+   `localStorage` only — the browser doesn't write them back to disk.
+2. Click the toolbar's **Save** button. The browser downloads
+   `poster-config.json` (with all your width / height edits) to
+   `~/Downloads/`.
+3. From a terminal:
+
+   ```bash
+   cd /path/to/your/poster-workspace
+   bash bake_and_export.sh
+   ```
+
+   `bake_and_export.sh` will:
+   - find the newest `poster-config.json` in `~/Downloads/`,
+   - copy it into `poster/poster-config.json`,
+   - re-embed it into `poster/index.html` so headless Chrome sees the
+     same layout the browser was showing, and
+   - run `export_pdf.sh` to produce `poster.pdf` in the workspace root.
+
+   Pass an explicit path if the JSON isn't in `~/Downloads/`:
+
+   ```bash
+   bash bake_and_export.sh /path/to/poster-config.json
+   ```
+
+4. Verify the PDF dimensions — for a Main / Findings poster you should
+   see exactly **84.01" × 42.01"** in the print dialog or the file's
+   metadata. Apple Preview shows this under *Tools → Show Inspector*.
+
+### Skipping Step 2 ("save & bake")
+
+If you haven't touched layout in the browser since the last sync, just
+run:
+
+```bash
+bash export_pdf.sh
+```
+
+That uses the on-disk `poster/poster-config.json` as-is and writes
+`poster.pdf` straight to the workspace root.
+
+### Why not Chrome's "Save as PDF" from File → Print
+
+Chrome's print dialog defaults to Letter (8.5"×11") paper. The poster's
+`@page` CSS rule asks for 84"×42" but the dialog overrides it unless
+you manually create a custom paper size in macOS *System Settings →
+Printers & Scanners → Manage Custom Sizes*. Headless Chrome via
+`export_pdf.sh` honors `@page` natively, so the helper scripts are the
+reliable path.
+
+### Print-resolution notes
+
+`export_pdf.sh` embeds images at their **native pixel resolution** —
+Chrome does not upsample. A figure that is 1600 px wide and is
+displayed at 200 mm (≈ 7.87") on the poster prints at ~203 DPI, which
+is acceptable for poster viewing distance but below the 300 DPI
+threshold some printers prefer for fine detail. For the sharpest
+result:
+
+- Render figures from the source paper at the highest resolution you
+  can (re-export from matplotlib with `dpi=300`, re-render TikZ as PDF
+  then rasterize at 300 DPI, etc.).
+- Drop the high-res copies into `assets/figures/` and re-run
+  `sync_poster_from_brief.py`.
+- Text, gradients, and the CVPR / institution SVG logos remain vector
+  in the PDF and stay sharp at any zoom regardless of source DPI.
+
+### Converting to PowerPoint
+
+The HTML editor and the PDF export are the native formats; PPTX is a
+lossy detour. If a venue insists on PPTX:
+
+- Cleanest: use Adobe Acrobat (online or desktop) *Convert → PDF to
+  PowerPoint*. Free alternatives such as Smallpdf or iLovePDF work too.
+  Expect each card to come through as an image block — text inside the
+  PPTX won't be re-editable.
+- Simplest: open `poster.pdf` in Preview, *File → Export* to PNG at
+  300 DPI, then place that single image on one 84×42 PPTX slide.
+
+For real submissions, just send the printer or the conference upload
+form the PDF.
+
 ## Notes
 
 - The bundled CVPR 2026 spec was verified against official CVPR pages on `2026-05-13`.
