@@ -15,6 +15,11 @@ The skill focuses on practical poster work:
 - handling missing project URLs by falling back to paper or code links
 - generating reusable working files for figures, notes, and print review
 
+This repo now supports both:
+
+- bundled official assets shipped inside the skill
+- user-supplied template and logo overrides
+
 ## Official asset source
 
 If you have access to the official CVPR 2026 poster assets, use this Google Drive folder as the canonical source for templates, logos, and related conference artwork:
@@ -27,6 +32,26 @@ Recommended workflow:
 - put exported templates into `references/`
 - put logos into `assets/logos/`
 - mention in your prompt which file should be treated as the primary style reference
+
+## Built-in assets and override order
+
+The skill now ships with bundled official assets:
+
+- `cvpr-2026-poster/assets/official/templates/CVPR MAIN & FINDINGS Poster Template.pptx`
+- `cvpr-2026-poster/assets/official/templates/CVPR Workshop ONLY Poster Template.pptx`
+- `cvpr-2026-poster/assets/official/logos/CVPR_Logo2_Denver 2026_Color.eps`
+
+When the agent looks for style assets, use this priority:
+
+1. user-provided workspace files
+2. bundled official assets inside the skill
+3. the official CVPR shared Drive folder
+
+User-provided files always win. That means:
+
+- if the user puts a custom template in their workspace, use that instead of the bundled one
+- if the user puts custom logos in `assets/logos/`, use those instead of bundled logos
+- if the user provides nothing, fall back to the bundled official template and bundled official logo
 
 ## Who this is for
 
@@ -43,6 +68,10 @@ Use this if you are:
 cvpr-2026-poster/
 ├── SKILL.md
 ├── agents/openai.yaml
+├── assets/
+│   └── official/
+│       ├── logos/
+│       └── templates/
 ├── references/
 │   ├── cvpr-2026-spec.md
 │   ├── poster-brief-template.md
@@ -180,9 +209,10 @@ Recommended materials:
 - final title, authors, affiliations, and paper ID
 - 3 to 6 must-have figures
 - one main results table
-- an official template export in `PDF` or `PPTX` if you want close visual matching
+- an official template export in `PDF` or `PPTX` if you want to override the bundled template
 - a QR target link such as arXiv, GitHub, a lab page, or a demo page
 - any CVPR logo, acronym, or poster header assets exported from the official Drive folder
+If you do not provide a template, the skill will use the bundled official template for the selected track by default.
 
 ### 3. Ask the agent to use the skill
 
@@ -209,6 +239,7 @@ The expected outputs are:
 - `print_checklist.md`
 - a recommended section structure for the poster
 - concrete guidance on which figures and numbers to emphasize
+- automatic use of the bundled official template when no override is supplied
 
 ### 5. Build the actual poster
 

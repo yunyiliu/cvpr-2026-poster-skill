@@ -89,7 +89,24 @@ If the user provides the official template as Google Slides, PowerPoint, or PDF:
 - preserve the conference-like header hierarchy, margins, whitespace, and logo placement
 - do not let the template force a text-heavy poster
 
-If the user references an official shared asset folder, ask them to export the needed files and place them in:
+Resolve template and logo assets in this order:
+
+1. user workspace overrides
+2. bundled official assets in this skill
+3. official shared asset folder exports
+
+Workspace overrides to prefer when present:
+
+- templates under `references/` such as `official-template.pdf` or `official-template.pptx`
+- logos under `assets/logos/`
+
+Bundled assets in this skill:
+
+- `assets/official/templates/CVPR MAIN & FINDINGS Poster Template.pptx`
+- `assets/official/templates/CVPR Workshop ONLY Poster Template.pptx`
+- `assets/official/logos/CVPR_Logo2_Denver 2026_Color.eps`
+
+If the user references an official shared asset folder and no local files exist, ask them to export the needed files and place them in:
 
 - `references/` for templates and reference PDFs
 - `assets/logos/` for logos and conference marks
@@ -113,6 +130,8 @@ You can scaffold them with:
 ```bash
 python3 scripts/init_poster_project.py --project-dir ./poster-workspace --track main
 ```
+
+The scaffold script will copy bundled official assets into the workspace when they are available for the selected track.
 
 ## Preflight
 

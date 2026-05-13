@@ -59,6 +59,7 @@
 ## Style
 
 - Official template provided: yes or no
+- Bundled template available: yes or no
 - Reference files:
 - Notes on colors, spacing, and logo placement:
-
+- Asset priority used: workspace override / bundled official / shared Drive export

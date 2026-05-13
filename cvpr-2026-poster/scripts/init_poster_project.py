@@ -13,6 +13,7 @@ Example:
 from __future__ import annotations
 
 import argparse
+import shutil
 from pathlib import Path
 
 
@@ -37,13 +38,16 @@ TRACK_SPECS = {
     },
 }
 
+MAIN_FINDINGS_TEMPLATE = "CVPR MAIN & FINDINGS Poster Template.pptx"
+WORKSHOP_TEMPLATE = "CVPR Workshop ONLY Poster Template.pptx"
+
 
 def build_poster_brief(args: argparse.Namespace, spec: dict[str, str]) -> str:
     qr_target = args.qr_url or "[add QR target]"
     title = args.title or "[add final title]"
     paper_id = args.paper_id or "[add paper id]"
     presenter = args.presenter or "[add presenter name]"
-    template_source = args.template_source or "[optional template PDF/PPTX/Slides export]"
+    template_source = args.template_source or "[workspace override or bundled official template]"
 
     return f"""# Poster Brief
 
@@ -105,6 +109,7 @@ def build_poster_brief(args: argparse.Namespace, spec: dict[str, str]) -> str:
 ## Style
 
 - Template source: {template_source}
+- Template priority: workspace override -> bundled official asset -> shared Drive export
 - Match official CVPR-style spacing and header hierarchy
 - Use little text and a few large expressive figures
 - Do not copy-paste the paper
@@ -165,6 +170,36 @@ def build_print_checklist(spec: dict[str, str]) -> str:
 """
 
 
+def copy_bundled_assets(project_dir: Path, track: str, skill_dir: Path) -> list[str]:
+    copied: list[str] = []
+    templates_dir = skill_dir / "assets" / "official" / "templates"
+    bundled_logos_dir = skill_dir / "assets" / "official" / "logos"
+    workspace_templates_dir = project_dir / "references" / "templates"
+    workspace_logos_dir = project_dir / "assets" / "logos" / "official"
+
+    workspace_templates_dir.mkdir(parents=True, exist_ok=True)
+    workspace_logos_dir.mkdir(parents=True, exist_ok=True)
+
+    if track in {"main", "findings"}:
+        template_path = templates_dir / MAIN_FINDINGS_TEMPLATE
+    else:
+        template_path = templates_dir / WORKSHOP_TEMPLATE
+
+    if template_path.exists():
+        target = workspace_templates_dir / template_path.name
+        shutil.copy2(template_path, target)
+        copied.append(str(target.relative_to(project_dir)))
+
+    if bundled_logos_dir.exists():
+        for item in sorted(bundled_logos_dir.iterdir()):
+            if item.is_file() and not item.name.startswith("."):
+                target = workspace_logos_dir / item.name
+                shutil.copy2(item, target)
+                copied.append(str(target.relative_to(project_dir)))
+
+    return copied
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Initialize a CVPR 2026 poster workspace.")
     parser.add_argument("--project-dir", required=True, help="Directory to create for the poster workspace.")
@@ -182,6 +217,7 @@ def main() -> None:
     args = parse_args()
     spec = TRACK_SPECS[args.track]
     project_dir = Path(args.project_dir).expanduser().resolve()
+    skill_dir = Path(__file__).resolve().parents[1]
 
     for relative in [
         "assets/figures",
@@ -191,11 +227,27 @@ def main() -> None:
     ]:
         (project_dir / relative).mkdir(parents=True, exist_ok=True)
 
+    copied_assets = copy_bundled_assets(project_dir, args.track, skill_dir)
+
+    notes_lines = [
+        "# Notes",
+        "",
+        "- Add links to the official template here.",
+        "- Add figure captions or pending design notes here.",
+        "- Asset priority: workspace override -> bundled official asset -> shared Drive export.",
+    ]
+    if copied_assets:
+        notes_lines.append("- Bundled assets copied into this workspace:")
+        for relative in copied_assets:
+            notes_lines.append(f"  - {relative}")
+    else:
+        notes_lines.append("- No bundled asset was copied for this track.")
+
     files = {
         "poster_brief.md": build_poster_brief(args, spec),
         "poster_outline.md": build_poster_outline(args, spec),
         "print_checklist.md": build_print_checklist(spec),
-        "references/notes.md": "# Notes\n\n- Add links to the official template here.\n- Add figure captions or pending design notes here.\n",
+        "references/notes.md": "\n".join(notes_lines) + "\n",
     }
 
     for relative_path, content in files.items():
@@ -205,9 +257,10 @@ def main() -> None:
     print(f"Created poster workspace at: {project_dir}")
     print("Next steps:")
     print("1. Add figures to assets/figures/")
-    print("2. Add logos to assets/logos/")
-    print("3. Fill poster_brief.md and poster_outline.md")
-    print("4. Export the final poster as PDF with no bleed")
+    print("2. Add override logos to assets/logos/ if needed")
+    print("3. Add an override template to references/ if needed")
+    print("4. Fill poster_brief.md and poster_outline.md")
+    print("5. Export the final poster as PDF with no bleed")
 
 
 if __name__ == "__main__":
