@@ -7,8 +7,12 @@
 - Track: `main` / `findings` / `workshop`
 - Authors:
 - Affiliations:
+- Institution websites, optional:
+  - 
 - Presenter:
 - Contact email:
+
+Tip: if the paper has multiple schools or labs, list one website per institution in the same order as `Affiliations`.
 
 ## Format
 

@@ -32,11 +32,21 @@ python3 cvpr-2026-poster/scripts/init_poster_project.py \
 
 4. Fill `poster-workspace/poster_brief.md`
 
+If the paper has multiple schools or labs, list one institution website per school under `Institution websites, optional`, in the same order as `Affiliations`.
+
 5. Sync the brief into the editable poster:
 
 ```bash
 python3 cvpr-2026-poster/scripts/sync_poster_from_brief.py \
   --project-dir ./poster-workspace
+```
+
+If you do not have school or lab logos yet, use:
+
+```bash
+python3 cvpr-2026-poster/scripts/sync_poster_from_brief.py \
+  --project-dir ./poster-workspace \
+  --fetch-logos-if-missing
 ```
 
 6. Open the editable poster:
@@ -57,6 +67,9 @@ What the sync step now does automatically:
 - copies user logos into `poster/logos/`
 - generates a live QR image URL from `QR target`
 - runs an image-aware layout optimization pass
+
+If `--fetch-logos-if-missing` is used, it will also try to download institution logos into `assets/logos/auto/`.
+When multiple institutions are listed, it will try to fetch one logo per institution.
 
 It is designed for two use cases:
 
@@ -143,6 +156,7 @@ cvpr-2026-poster/
 │   ├── poster-brief-template.md
 │   └── print-checklist.md
 └── scripts/
+    ├── fetch_institution_logos.py
     ├── init_poster_project.py
     ├── optimize_poster_layout.py
     ├── poster_image_utils.py
@@ -322,6 +336,8 @@ At minimum, fill these fields:
 - `Title`
 - `Authors`
 - `Affiliations`
+- `Institution websites, optional` if you want more reliable auto logo fetches
+  Put one website per institution, in the same order as `Affiliations`, when the paper has multiple schools or labs.
 - `QR target`
 - `One-sentence takeaway`
 - `Problem`
@@ -348,6 +364,23 @@ This updates:
 - copied displayable figures under `poster/figures/`
 - auto-generated QR image URL from `QR target`
 - column widths and figure card heights based on image aspect ratios
+
+If you want the sync step to also try downloading school or lab logos, run:
+
+```bash
+python3 cvpr-2026-poster/scripts/sync_poster_from_brief.py \
+  --project-dir ./poster-workspace \
+  --fetch-logos-if-missing
+```
+
+This works best when `poster_brief.md` lists one institution website per school or lab in the same order as `Affiliations`.
+
+If you want to fetch missing logos before syncing, you can also run:
+
+```bash
+python3 cvpr-2026-poster/scripts/fetch_institution_logos.py \
+  --project-dir ./poster-workspace
+```
 
 ### 4.5 Run the optimizer again if you change figures
 

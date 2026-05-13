@@ -59,6 +59,8 @@ Ask for or infer these before drafting:
 - one main quantitative table
 - a QR target link
 - school, lab, or company logos when the header should show institution branding
+- institution website URLs when the user wants the agent to try auto-fetching missing logos
+  When there are multiple institutions, prefer one website per institution in the same order as `Affiliations`.
 
 If the user has no project website, use one of these as the QR target:
 
@@ -171,6 +173,14 @@ After editing `poster_brief.md`, sync it with:
 ```bash
 python3 scripts/sync_poster_from_brief.py --project-dir ./poster-workspace
 ```
+
+If the user has no institution logos yet, prefer:
+
+```bash
+python3 scripts/sync_poster_from_brief.py --project-dir ./poster-workspace --fetch-logos-if-missing
+```
+
+When multiple schools or labs appear in the paper, make sure `poster_brief.md` lists one institution website per institution so the fallback fetch can add one logo per school instead of only one generic logo.
 
 If the user later changes figures, rerun:
 

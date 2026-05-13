@@ -64,7 +64,11 @@ def build_poster_brief(args: argparse.Namespace, spec: dict[str, str]) -> str:
 - Track: {args.track}
 - Authors: [add final authors]
 - Affiliations: [add affiliations]
+- Institution websites, optional:
+  - 
 - Presenter: {presenter}
+
+Tip: if the paper has multiple schools or labs, list one website per institution in the same order as Affiliations.
 
 ## Format
 
@@ -416,6 +420,7 @@ def main() -> None:
     print("Next steps:")
     print("1. Add figures to assets/figures/")
     print("2. Add school or lab logos to assets/logos/")
+    print("   If the paper has multiple institutions, prepare one logo or one website per institution.")
     print("3. Add an override template to references/ if needed")
     print("4. Open poster/index.html to edit the generated poster")
     print("5. Fill poster_brief.md and poster_outline.md")

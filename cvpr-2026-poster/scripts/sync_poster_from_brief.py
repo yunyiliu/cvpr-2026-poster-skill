@@ -15,6 +15,7 @@ import shutil
 from pathlib import Path
 from urllib.parse import quote, urlparse
 
+from fetch_institution_logos import fetch_logos_if_missing
 from init_poster_project import TRACK_SPECS, write_editable_poster
 from optimize_poster_layout import optimize_project
 
@@ -24,6 +25,7 @@ DISPLAY_EXTS = {".png", ".jpg", ".jpeg", ".svg", ".webp", ".gif"}
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Sync poster_brief.md into the editable poster.")
     parser.add_argument("--project-dir", required=True, help="Poster workspace directory.")
+    parser.add_argument("--fetch-logos-if-missing", action="store_true", help="Try to auto-fetch institution logos if assets/logos/ has none.")
     return parser.parse_args()
 
 
@@ -266,6 +268,9 @@ def main() -> None:
     track = get_value(sections, "Paper", "Track").lower() or "main"
     if track not in TRACK_SPECS:
         track = "main"
+
+    if args.fetch_logos_if_missing:
+        fetch_logos_if_missing(project_dir, force=False, verbose=True)
 
     user_logo_paths = copy_user_logos(project_dir)
     figure_paths = copy_figure_assets(project_dir)
