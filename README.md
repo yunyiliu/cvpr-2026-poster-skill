@@ -1,6 +1,8 @@
 # CVPR 2026 Poster Skill
 
-A reusable AI skill for turning a CVPR 2026 paper into a poster brief, layout plan, and print checklist under the official conference constraints.
+A reusable AI skill for turning a CVPR 2026 paper into an editable poster workspace under the official conference constraints.
+
+The generated output is not just a brief. It includes a browser-editable `poster/index.html` plus planning files and print checks.
 
 It is designed for two use cases:
 
@@ -14,6 +16,7 @@ The skill focuses on practical poster work:
 - adapting the official CVPR template as a style reference
 - handling missing project URLs by falling back to paper or code links
 - generating reusable working files for figures, notes, and print review
+- generating a self-contained editable HTML poster you can open locally
 
 This repo now supports both:
 
@@ -53,6 +56,12 @@ User-provided files always win. That means:
 - if the user puts custom logos in `assets/logos/`, use those instead of bundled logos
 - if the user provides nothing, fall back to the bundled official template and bundled official logo
 
+Important:
+
+- the bundled logo is only the conference branding
+- users should still put their school, lab, or company logos into `assets/logos/`
+- those institution logos should be added to the poster header when appropriate
+
 ## Who this is for
 
 Use this if you are:
@@ -69,6 +78,8 @@ cvpr-2026-poster/
 ├── SKILL.md
 ├── agents/openai.yaml
 ├── assets/
+│   ├── editor/
+│   │   └── editable-poster-template.html
 │   └── official/
 │       ├── logos/
 │       └── templates/
@@ -190,6 +201,11 @@ poster-workspace/
 │   ├── figures/
 │   └── logos/
 ├── output/
+├── poster/
+│   ├── index.html
+│   ├── poster-config.json
+│   ├── figures/
+│   └── logos/
 ├── references/
 │   └── notes.md
 ├── poster_brief.md
@@ -212,6 +228,7 @@ Recommended materials:
 - an official template export in `PDF` or `PPTX` if you want to override the bundled template
 - a QR target link such as arXiv, GitHub, a lab page, or a demo page
 - any CVPR logo, acronym, or poster header assets exported from the official Drive folder
+- your school, lab, or company logos in `assets/logos/`
 If you do not provide a template, the skill will use the bundled official template for the selected track by default.
 
 ### 3. Ask the agent to use the skill
@@ -234,23 +251,33 @@ Use $cvpr-2026-poster to adapt the official CVPR 2026 template and prepare a pri
 
 The expected outputs are:
 
+- `poster/index.html`
+- `poster/poster-config.json`
 - `poster_brief.md`
 - `poster_outline.md`
 - `print_checklist.md`
 - a recommended section structure for the poster
 - concrete guidance on which figures and numbers to emphasize
 - automatic use of the bundled official template when no override is supplied
+- a generated `poster/index.html` visual editor with room for your institution logos
 
-### 5. Build the actual poster
+### 5. Edit and export the poster
 
-After the brief is ready, use your preferred poster generation workflow:
+Open the generated poster directly in your browser:
 
-- HTML poster workflow
-- PowerPoint or Google Slides
-- Figma
-- LaTeX beamerposter
+```bash
+open poster-workspace/poster/index.html
+```
 
-This skill is mainly for the planning, structure, and CVPR-specific preflight layer.
+The editor is meant for layout iteration:
+
+- resize columns
+- resize card heights
+- move cards between columns
+- save or copy the current layout config
+- export the final result to `PDF`
+
+The planning files still matter, but the repo now also ships an actual editable poster layer.
 
 ## Recommended inputs
 
@@ -288,9 +315,9 @@ The bundled references encode:
 
 1. Copy the skill into your AI tool.
 2. Run `init_poster_project.py`.
-3. Drop figures and links into the scaffolded workspace.
-4. Ask the agent to produce `poster_brief.md` and `poster_outline.md`.
-5. Build the final poster in your preferred editor.
+3. Open `poster/index.html` to verify the editable poster scaffold is there.
+4. Drop figures, links, and school logos into the scaffolded workspace.
+5. Ask the agent to fill `poster/index.html`, `poster_brief.md`, and `poster_outline.md`.
 6. Use `print_checklist.md` before exporting the final PDF.
 
 ## Notes

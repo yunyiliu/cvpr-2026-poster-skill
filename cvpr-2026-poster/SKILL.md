@@ -7,7 +7,7 @@ description: Use when the user needs to plan, draft, or refine a CVPR 2026 poste
 
 ## Overview
 
-This skill turns a paper, a few figures, and optional template assets into a CVPR 2026 poster brief, section plan, and print checklist. Prefer it for Main, Findings, or Workshop posters when the work must follow official CVPR 2026 poster sizing and printing rules.
+This skill turns a paper, a few figures, and optional template assets into a CVPR 2026 editable poster workspace. Prefer it for Main, Findings, or Workshop posters when the work must follow official CVPR 2026 poster sizing and printing rules and the user wants a directly editable poster output, not just planning notes.
 
 ## Workflow
 
@@ -16,15 +16,17 @@ This skill turns a paper, a few figures, and optional template assets into a CVP
 3. Compress the paper into a 5 to 10 minute poster story instead of copying the paper.
 4. Default to large figures and sparse text.
 5. Use the official template as a style reference when available.
-6. Preflight the print export before calling the poster done.
+6. Fill the editable HTML poster scaffold in `poster/index.html`.
+7. Keep `poster/poster-config.json` in sync with the HTML defaults.
+8. Preflight the print export before calling the poster done.
 
 ## How To Use This Skill
 
 Use the skill in three phases:
 
 1. Create or organize a poster workspace.
-2. Fill `poster_brief.md` with paper facts, figures, links, and style constraints.
-3. Ask the agent to turn that brief into a section plan and poster-specific writing.
+2. Fill `poster_brief.md` with paper facts, figures, links, style constraints, and institution logos.
+3. Ask the agent to turn that brief into `poster/index.html`, `poster/poster-config.json`, and poster-specific writing.
 
 Typical prompts:
 
@@ -53,6 +55,7 @@ Ask for or infer these before drafting:
 - 3 to 6 must-have figures
 - one main quantitative table
 - a QR target link
+- school, lab, or company logos when the header should show institution branding
 
 If the user has no project website, use one of these as the QR target:
 
@@ -81,6 +84,22 @@ For CVPR papers, a reliable default structure is:
 - `Key Mechanism or Ablation`
 - `Results / Qualitative Examples / Conclusion`
 
+## Editable Poster Output
+
+The generated output should include:
+
+- `poster/index.html` as the browser-editable poster
+- `poster/poster-config.json` as the saved layout and content config
+- `poster/logos/` for conference and institution logos
+- `poster/figures/` for copied figures used by the poster
+
+The bundled HTML editor already supports layout editing. When filling it:
+
+- update the title, authors, affiliations, badge, and logo list
+- replace placeholder card content with paper-specific content
+- copy selected figures into `poster/figures/` and reference them from the HTML
+- keep the poster self-contained enough to open locally via `file://`
+
 ## Template Adaptation
 
 If the user provides the official template as Google Slides, PowerPoint, or PDF:
@@ -99,6 +118,11 @@ Workspace overrides to prefer when present:
 
 - templates under `references/` such as `official-template.pdf` or `official-template.pptx`
 - logos under `assets/logos/`
+
+Treat bundled conference logos and user institution logos differently:
+
+- bundled conference logos provide CVPR branding by default
+- user institution logos from `assets/logos/` should be added to the poster header when available
 
 Bundled assets in this skill:
 
@@ -121,6 +145,8 @@ If no template is provided, stay close to official guidance:
 
 When building or organizing poster work, prefer these working files:
 
+- `poster/index.html`
+- `poster/poster-config.json`
 - `poster_brief.md`
 - `poster_outline.md`
 - `print_checklist.md`

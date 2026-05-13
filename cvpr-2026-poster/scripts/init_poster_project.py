@@ -21,18 +21,24 @@ TRACK_SPECS = {
     "main": {
         "size": "84in x 42in",
         "metric_size": "2134mm x 1067mm",
+        "width_mm": 2134,
+        "height_mm": 1067,
         "columns": "4",
         "job_name_format": "FULL NAME + PAPER ID",
     },
     "findings": {
         "size": "84in x 42in",
         "metric_size": "2134mm x 1067mm",
+        "width_mm": 2134,
+        "height_mm": 1067,
         "columns": "4",
         "job_name_format": "FULL NAME + PAPER ID",
     },
     "workshop": {
         "size": "42in x 21in",
         "metric_size": "1067mm x 533mm",
+        "width_mm": 1067,
+        "height_mm": 533,
         "columns": "3",
         "job_name_format": "FULL NAME + WORKSHOP ACRONYM + PAPER ID",
     },
@@ -170,15 +176,144 @@ def build_print_checklist(spec: dict[str, str]) -> str:
 """
 
 
-def copy_bundled_assets(project_dir: Path, track: str, skill_dir: Path) -> list[str]:
+def build_editable_poster_config(args: argparse.Namespace, spec: dict[str, str], logo_paths: list[str]) -> dict:
+    if args.track in {"main", "findings"}:
+        badge = "CVPR 2026 Main / Findings"
+        columns = [
+            {"id": "col1", "widthMm": 470, "cards": ["problem", "contrib"]},
+            {"id": "col2", "widthMm": 540, "cards": ["overview", "method"]},
+            {"id": "col3", "widthMm": 540, "cards": ["results", "qualitative"]},
+            {"id": "col4", "widthMm": 470, "cards": ["table", "conclusion"]},
+        ]
+    else:
+        badge = "CVPR 2026 Workshop"
+        columns = [
+            {"id": "col1", "widthMm": 300, "cards": ["problem", "contrib"]},
+            {"id": "col2", "widthMm": 410, "cards": ["overview", "results"]},
+            {"id": "col3", "widthMm": 300, "cards": ["table", "conclusion"]},
+        ]
+
+    logos = [{"src": path, "alt": "CVPR 2026"} for path in logo_paths]
+    qr_src = ""
+    title = args.title or "CVPR 2026 Poster Title"
+
+    cards = {
+        "problem": {
+            "title": "Problem & Motivation",
+            "accent": "#1b5da2",
+            "heightMm": 135 if args.track in {"main", "findings"} else 85,
+            "html": (
+                "<p><b>Replace this section</b> with a crisp motivation statement and the problem setting.</p>"
+                "<ul><li>Why the task matters</li><li>Why current methods fall short</li><li>What makes your framing distinct</li></ul>"
+            ),
+        },
+        "contrib": {
+            "title": "Contributions",
+            "accent": "#5a8f13",
+            "html": (
+                "<ul><li>Main contribution 1</li><li>Main contribution 2</li><li>Main contribution 3</li></ul>"
+                "<p>Keep this card short and scan-friendly.</p>"
+            ),
+        },
+        "overview": {
+            "title": "Method Overview",
+            "accent": "#1b5da2",
+            "heightMm": 215 if args.track in {"main", "findings"} else 110,
+            "html": (
+                "<div class='fig'><div class='fig-box'>Drop your main method figure into <code>poster/figures/</code> and update the HTML.</div>"
+                "<div class='fig-cap'><b>Overview.</b> Use this space for your main pipeline or architecture figure.</div></div>"
+            ),
+        },
+        "method": {
+            "title": "Method Details",
+            "accent": "#2b7a68",
+            "html": (
+                "<ul><li>Key mechanism or module</li><li>Training or optimization detail</li><li>Optional equation or ablation hook</li></ul>"
+                "<p>Prefer bullets over paragraphs.</p>"
+            ),
+        },
+        "results": {
+            "title": "Results",
+            "accent": "#7a4bb3",
+            "heightMm": 220 if args.track in {"main", "findings"} else 120,
+            "html": (
+                "<div class='fig'><div class='fig-box'>Place a qualitative or main results panel here.</div>"
+                "<div class='fig-cap'><b>Results.</b> This card is intentionally large so it can absorb visual content.</div></div>"
+            ),
+        },
+        "qualitative": {
+            "title": "Qualitative Findings",
+            "accent": "#d17823",
+            "html": (
+                "<p>Use this card for qualitative examples, error analysis, or a visual comparison.</p>"
+                "<ul><li>Before vs after</li><li>Failure modes</li><li>Clinical or practical significance</li></ul>"
+            ),
+        },
+        "table": {
+            "title": "Main Quantitative Table",
+            "accent": "#d17823",
+            "heightMm": 150 if args.track in {"main", "findings"} else 95,
+            "html": (
+                "<table><thead><tr><th>Method</th><th>Metric</th><th>Metric</th></tr></thead>"
+                "<tbody><tr><td>Baseline</td><td>0.00</td><td>0.00</td></tr><tr><td><b>Ours</b></td><td><b>0.00</b></td><td><b>0.00</b></td></tr></tbody></table>"
+            ),
+        },
+        "conclusion": {
+            "title": "Conclusion & Links",
+            "accent": "#b14f4f",
+            "html": (
+                "<ul><li>Takeaway 1</li><li>Takeaway 2</li><li>Takeaway 3</li></ul>"
+                "<p><b>Paper:</b> add link<br><b>Code:</b> add link<br><b>QR:</b> add final target</p>"
+            ),
+        },
+    }
+
+    return {
+        "widthMm": spec["width_mm"],
+        "heightMm": spec["height_mm"],
+        "gapMm": 10,
+        "paddingMm": 16,
+        "fontScale": 1.0,
+        "title": title,
+        "authors": "Add authors here",
+        "affiliations": "Add affiliations here",
+        "badge": badge,
+        "qr": {"src": qr_src, "label": "Paper / Project"},
+        "logos": logos,
+        "columns": columns,
+        "cards": cards,
+    }
+
+
+def write_editable_poster(project_dir: Path, skill_dir: Path, config: dict) -> None:
+    template_path = skill_dir / "assets" / "editor" / "editable-poster-template.html"
+    template_html = template_path.read_text(encoding="utf-8")
+    poster_dir = project_dir / "poster"
+    poster_dir.mkdir(parents=True, exist_ok=True)
+    html = template_html.replace("__POSTER_CONFIG__", json_dumps(config))
+    (poster_dir / "index.html").write_text(html, encoding="utf-8")
+    (poster_dir / "poster-config.json").write_text(json_dumps(config, pretty=True), encoding="utf-8")
+
+
+def json_dumps(data: dict, pretty: bool = False) -> str:
+    import json
+    if pretty:
+        return json.dumps(data, indent=2, ensure_ascii=False)
+    return json.dumps(data, ensure_ascii=False)
+
+
+def copy_bundled_assets(project_dir: Path, track: str, skill_dir: Path) -> tuple[list[str], list[str]]:
     copied: list[str] = []
+    logo_paths: list[str] = []
     templates_dir = skill_dir / "assets" / "official" / "templates"
     bundled_logos_dir = skill_dir / "assets" / "official" / "logos"
     workspace_templates_dir = project_dir / "references" / "templates"
     workspace_logos_dir = project_dir / "assets" / "logos" / "official"
+    poster_logos_dir = project_dir / "poster" / "logos" / "official"
 
     workspace_templates_dir.mkdir(parents=True, exist_ok=True)
     workspace_logos_dir.mkdir(parents=True, exist_ok=True)
+    poster_logos_dir.mkdir(parents=True, exist_ok=True)
 
     if track in {"main", "findings"}:
         template_path = templates_dir / MAIN_FINDINGS_TEMPLATE
@@ -193,11 +328,16 @@ def copy_bundled_assets(project_dir: Path, track: str, skill_dir: Path) -> list[
     if bundled_logos_dir.exists():
         for item in sorted(bundled_logos_dir.iterdir()):
             if item.is_file() and not item.name.startswith("."):
-                target = workspace_logos_dir / item.name
-                shutil.copy2(item, target)
-                copied.append(str(target.relative_to(project_dir)))
+                workspace_target = workspace_logos_dir / item.name
+                poster_target = poster_logos_dir / item.name
+                shutil.copy2(item, workspace_target)
+                shutil.copy2(item, poster_target)
+                copied.append(str(workspace_target.relative_to(project_dir)))
+                copied.append(str(poster_target.relative_to(project_dir)))
+                if item.suffix.lower() in {".svg", ".png", ".jpg", ".jpeg", ".webp"}:
+                    logo_paths.append(str(poster_target.relative_to(project_dir / "poster")))
 
-    return copied
+    return copied, logo_paths
 
 
 def parse_args() -> argparse.Namespace:
@@ -223,11 +363,16 @@ def main() -> None:
         "assets/figures",
         "assets/logos",
         "references",
+        "poster",
+        "poster/figures",
+        "poster/logos",
         "output",
     ]:
         (project_dir / relative).mkdir(parents=True, exist_ok=True)
 
-    copied_assets = copy_bundled_assets(project_dir, args.track, skill_dir)
+    copied_assets, logo_paths = copy_bundled_assets(project_dir, args.track, skill_dir)
+    editable_config = build_editable_poster_config(args, spec, logo_paths)
+    write_editable_poster(project_dir, skill_dir, editable_config)
 
     notes_lines = [
         "# Notes",
@@ -235,6 +380,7 @@ def main() -> None:
         "- Add links to the official template here.",
         "- Add figure captions or pending design notes here.",
         "- Asset priority: workspace override -> bundled official asset -> shared Drive export.",
+        "- Put school or lab logos under assets/logos/ and make sure the final header uses them if needed.",
     ]
     if copied_assets:
         notes_lines.append("- Bundled assets copied into this workspace:")
@@ -257,10 +403,11 @@ def main() -> None:
     print(f"Created poster workspace at: {project_dir}")
     print("Next steps:")
     print("1. Add figures to assets/figures/")
-    print("2. Add override logos to assets/logos/ if needed")
+    print("2. Add school or lab logos to assets/logos/")
     print("3. Add an override template to references/ if needed")
-    print("4. Fill poster_brief.md and poster_outline.md")
-    print("5. Export the final poster as PDF with no bleed")
+    print("4. Open poster/index.html to edit the generated poster")
+    print("5. Fill poster_brief.md and poster_outline.md")
+    print("6. Export the final poster as PDF with no bleed")
 
 
 if __name__ == "__main__":

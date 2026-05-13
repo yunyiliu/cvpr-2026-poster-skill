@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CVPR 2026 Editable Poster</title>
+<style>
+  :root {
+    --poster-w: 2134mm;
+    --poster-h: 1067mm;
+    --page-bg: #e8edf3;
+    --poster-bg: #f7fafc;
+    --header-a: #154f93;
+    --header-b: #2f7bc7;
+    --header-c: #4ba9ea;
+    --card-bg: #ffffff;
+    --card-border: #d8e0ea;
+    --text: #14304b;
+    --muted: #47627c;
+    --gap: 10mm;
+    --pad: 16mm;
+    --radius: 5mm;
+    --font-scale: 1;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  html { background: var(--page-bg); }
+  body {
+    width: var(--poster-w);
+    height: var(--poster-h);
+    font-family: "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+    color: var(--text);
+    background: var(--poster-bg);
+    overflow: hidden;
+    transform-origin: top left;
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+
+  @page { size: var(--poster-w) var(--poster-h); margin: 0; }
+  @media print {
+    html { background: #fff; }
+    body {
+      position: static;
+      transform: none !important;
+      width: var(--poster-w);
+      height: var(--poster-h);
+    }
+    .toolbar, .col-divider, .row-divider, .card-handle, .drop-zone { display: none !important; }
+  }
+
+  body.preview .toolbar,
+  body.preview .col-divider,
+  body.preview .row-divider,
+  body.preview .card-handle,
+  body.preview .drop-zone { display: none !important; }
+
+  #root {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-rows: auto 1fr;
+  }
+
+  .toolbar {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 1000;
+    display: flex;
+    gap: 6px;
+    padding: 6px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
+  }
+  .toolbar button {
+    border: 0;
+    padding: 7px 11px;
+    border-radius: 8px;
+    background: #1b5da2;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .toolbar button.secondary {
+    background: #dfe8f1;
+    color: #23405f;
+  }
+
+  .header {
+    background: linear-gradient(135deg, var(--header-a), var(--header-b) 58%, var(--header-c));
+    color: #fff;
+    padding: 14mm var(--pad) 12mm;
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    gap: 12mm;
+  }
+  .title {
+    font-size: calc(30pt * var(--font-scale));
+    line-height: 1.06;
+    font-weight: 850;
+    margin: 0 0 4mm;
+  }
+  .meta {
+    font-size: calc(14pt * var(--font-scale));
+    line-height: 1.35;
+    opacity: 0.95;
+    white-space: pre-line;
+  }
+  .badge {
+    align-self: start;
+    padding: 3mm 6mm;
+    border-radius: 999px;
+    border: 1.2mm solid rgba(255, 255, 255, 0.35);
+    font-size: calc(13pt * var(--font-scale));
+    font-weight: 800;
+    white-space: nowrap;
+  }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 8mm;
+  }
+  .logos {
+    display: flex;
+    align-items: center;
+    gap: 5mm;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .logos img {
+    max-height: 32mm;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+  }
+  .qr-block {
+    text-align: center;
+  }
+  .qr-block img {
+    width: 28mm;
+    height: 28mm;
+    object-fit: cover;
+    border-radius: 2mm;
+    background: #fff;
+    padding: 1mm;
+  }
+  .qr-label {
+    margin-top: 1mm;
+    font-size: calc(7.5pt * var(--font-scale));
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.92);
+  }
+
+  .poster-area {
+    padding: var(--gap) var(--pad) var(--pad);
+    display: flex;
+    gap: var(--gap);
+    min-height: 0;
+  }
+  .column {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap);
+    min-height: 0;
+  }
+  .column-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap);
+    min-height: 0;
+    flex: 1;
+  }
+
+  .col-divider {
+    width: 6mm;
+    margin: 0 -3mm;
+    cursor: col-resize;
+    position: relative;
+    z-index: 20;
+  }
+  .col-divider::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 1.5mm;
+    width: 3mm;
+    border-radius: 3mm;
+    background: rgba(27, 93, 162, 0.16);
+  }
+
+  .card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    background: var(--card-bg);
+    border: 0.6mm solid var(--card-border);
+    border-top: 2.4mm solid var(--card-accent, #1b5da2);
+    border-radius: var(--radius);
+    padding: 6mm 6.5mm 5.5mm;
+    box-shadow: 0 4px 18px rgba(16, 36, 61, 0.08);
+    overflow: hidden;
+  }
+  .card.flex-grow { flex: 1 1 0; }
+  .card.fixed-height { flex: 0 0 auto; }
+  .card h2 {
+    margin: 0 0 3mm;
+    font-size: calc(16pt * var(--font-scale));
+    line-height: 1.1;
+    font-weight: 850;
+    color: var(--card-accent, #1b5da2);
+  }
+  .card-body {
+    min-height: 0;
+    font-size: calc(10pt * var(--font-scale));
+    line-height: 1.35;
+    color: var(--text);
+  }
+  .card-body p { margin: 0 0 2.5mm; }
+  .card-body ul { margin: 0; padding-left: 5mm; }
+  .card-body li { margin: 0 0 1.8mm; }
+  .card-body img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto;
+  }
+  .card-body table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: calc(9pt * var(--font-scale));
+  }
+  .card-body th,
+  .card-body td {
+    border: 0.3mm solid #d6deea;
+    padding: 1.5mm 2mm;
+    text-align: left;
+  }
+  .card-body th {
+    background: #edf3fb;
+    color: #1c4f87;
+    font-weight: 800;
+  }
+
+  .card-handle {
+    position: absolute;
+    right: 4mm;
+    top: 4mm;
+    width: 8mm;
+    height: 8mm;
+    border-radius: 2mm;
+    background: rgba(27, 93, 162, 0.12);
+    color: #1b5da2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 900;
+    cursor: grab;
+    user-select: none;
+  }
+
+  .row-divider {
+    height: 6mm;
+    margin: -3mm 0;
+    cursor: row-resize;
+    position: relative;
+    z-index: 15;
+  }
+  .row-divider::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 1.5mm;
+    height: 3mm;
+    border-radius: 3mm;
+    background: rgba(27, 93, 162, 0.14);
+  }
+
+  .drop-zone {
+    height: 0;
+    position: relative;
+    z-index: 10;
+  }
+  .drop-zone.active {
+    height: 7mm;
+  }
+  .drop-zone-inner {
+    position: absolute;
+    inset: 0;
+    border-radius: 3mm;
+    border: 0.6mm dashed rgba(241, 131, 43, 0.85);
+    background: rgba(241, 131, 43, 0.12);
+  }
+
+  .fig {
+    display: flex;
+    flex-direction: column;
+    gap: 2mm;
+  }
+  .fig-box {
+    min-height: 120mm;
+    border-radius: 3mm;
+    background: #f3f7fb;
+    border: 0.3mm solid #d8e0eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .fig-cap {
+    font-size: calc(8pt * var(--font-scale));
+    color: var(--muted);
+  }
+</style>
+</head>
+<body>
+<div class="toolbar">
+  <button id="preview-toggle" class="secondary">Preview</button>
+  <button id="font-down" class="secondary">A-</button>
+  <button id="font-up" class="secondary">A+</button>
+  <button id="save-config">Save</button>
+  <button id="copy-config">Copy Config</button>
+  <button id="reset-config" class="secondary">Reset</button>
+</div>
+<div id="root"></div>
+<script>
+const INITIAL_CONFIG = __POSTER_CONFIG__;
+
+const deepClone = (obj) => JSON.parse(JSON.stringify(obj));
+let state = deepClone(INITIAL_CONFIG);
+const defaultState = deepClone(INITIAL_CONFIG);
+let dragCardId = null;
+
+const mm = (value) => `${value}mm`;
+
+function contentWidthMm() {
+  const gap = state.gapMm;
+  const pad = state.paddingMm;
+  return state.widthMm - pad * 2 - gap * (state.columns.length - 1);
+}
+
+function ensureColumnWidths() {
+  const total = state.columns.reduce((sum, column) => sum + column.widthMm, 0);
+  const target = contentWidthMm();
+  if (!total || Math.abs(total - target) < 0.5) return;
+  const scale = target / total;
+  state.columns.forEach((column) => {
+    column.widthMm = Math.max(140, Number((column.widthMm * scale).toFixed(1)));
+  });
+}
+
+function applyPosterDimensions() {
+  document.documentElement.style.setProperty("--poster-w", mm(state.widthMm));
+  document.documentElement.style.setProperty("--poster-h", mm(state.heightMm));
+  document.documentElement.style.setProperty("--gap", mm(state.gapMm));
+  document.documentElement.style.setProperty("--pad", mm(state.paddingMm));
+  document.documentElement.style.setProperty("--font-scale", state.fontScale);
+}
+
+function fitPosterToViewport() {
+  const wPx = state.widthMm * 3.7795275591;
+  const hPx = state.heightMm * 3.7795275591;
+  const scale = Math.min(window.innerWidth / wPx, window.innerHeight / hPx);
+  const x = Math.max(0, (window.innerWidth - wPx * scale) / 2);
+  const y = Math.max(0, (window.innerHeight - hPx * scale) / 2);
+  document.body.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
+}
+
+function renderHeader(root) {
+  const header = document.createElement("div");
+  header.className = "header";
+  const left = document.createElement("div");
+  left.innerHTML = `
+    <div class="title">${state.title}</div>
+    <div class="meta">${state.authors}</div>
+    <div class="meta">${state.affiliations}</div>
+  `;
+  const badge = document.createElement("div");
+  badge.className = "badge";
+  badge.textContent = state.badge;
+
+  const right = document.createElement("div");
+  right.className = "header-right";
+
+  const logos = document.createElement("div");
+  logos.className = "logos";
+  state.logos.forEach((logo) => {
+    const img = document.createElement("img");
+    img.src = logo.src;
+    img.alt = logo.alt || "logo";
+    logos.appendChild(img);
+  });
+  right.appendChild(logos);
+
+  if (state.qr && state.qr.src) {
+    const qr = document.createElement("div");
+    qr.className = "qr-block";
+    qr.innerHTML = `<img src="${state.qr.src}" alt="QR code"><div class="qr-label">${state.qr.label || "QR"}</div>`;
+    right.appendChild(qr);
+  }
+
+  header.appendChild(left);
+  header.appendChild(badge);
+  header.appendChild(right);
+  root.appendChild(header);
+}
+
+function createCard(cardId) {
+  const card = state.cards[cardId];
+  const el = document.createElement("section");
+  el.className = `card ${card.heightMm ? "fixed-height" : "flex-grow"}`;
+  el.dataset.cardId = cardId;
+  el.style.setProperty("--card-accent", card.accent || "#1b5da2");
+  if (card.heightMm) el.style.height = mm(card.heightMm);
+  el.innerHTML = `
+    <div class="card-handle" draggable="true" title="Drag to move">◆</div>
+    <h2>${card.title}</h2>
+    <div class="card-body">${card.html}</div>
+  `;
+
+  el.querySelector(".card-handle").addEventListener("dragstart", () => {
+    dragCardId = cardId;
+    document.querySelectorAll(".drop-zone").forEach((zone) => zone.classList.add("active"));
+  });
+  el.querySelector(".card-handle").addEventListener("dragend", () => {
+    dragCardId = null;
+    document.querySelectorAll(".drop-zone").forEach((zone) => zone.classList.remove("active"));
+  });
+  return el;
+}
+
+function moveCard(cardId, targetColumnId, targetIndex) {
+  if (!cardId) return;
+  let removed = false;
+  state.columns.forEach((column) => {
+    const idx = column.cards.indexOf(cardId);
+    if (idx >= 0) {
+      column.cards.splice(idx, 1);
+      removed = true;
+    }
+  });
+  if (!removed) return;
+  const targetColumn = state.columns.find((column) => column.id === targetColumnId);
+  targetColumn.cards.splice(targetIndex, 0, cardId);
+  render();
+}
+
+function swapCards(cardA, cardB) {
+  if (cardA === cardB) return;
+  let locA = null;
+  let locB = null;
+  state.columns.forEach((column) => {
+    column.cards.forEach((id, index) => {
+      if (id === cardA) locA = { column, index };
+      if (id === cardB) locB = { column, index };
+    });
+  });
+  if (!locA || !locB) return;
+  locA.column.cards[locA.index] = cardB;
+  locB.column.cards[locB.index] = cardA;
+  render();
+}
+
+function addRowDivider(column, upperCardId) {
+  const divider = document.createElement("div");
+  divider.className = "row-divider";
+  divider.addEventListener("mousedown", (event) => {
+    event.preventDefault();
+    const card = state.cards[upperCardId];
+    const initialHeight = card.heightMm || 120;
+    const startY = event.clientY;
+    const onMove = (moveEvent) => {
+      const deltaMm = (moveEvent.clientY - startY) / 3.7795275591;
+      card.heightMm = Math.max(60, Number((initialHeight + deltaMm).toFixed(1)));
+      render();
+    };
+    const onUp = () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  });
+  column.appendChild(divider);
+}
+
+function addDropZone(columnBody, columnId, index) {
+  const zone = document.createElement("div");
+  zone.className = "drop-zone";
+  zone.innerHTML = '<div class="drop-zone-inner"></div>';
+  zone.addEventListener("dragover", (event) => event.preventDefault());
+  zone.addEventListener("drop", (event) => {
+    event.preventDefault();
+    moveCard(dragCardId, columnId, index);
+  });
+  columnBody.appendChild(zone);
+}
+
+function renderColumns(root) {
+  const poster = document.createElement("div");
+  poster.className = "poster-area";
+
+  state.columns.forEach((column, columnIndex) => {
+    const columnEl = document.createElement("div");
+    columnEl.className = "column";
+    columnEl.style.width = mm(column.widthMm);
+    columnEl.dataset.columnId = column.id;
+
+    const body = document.createElement("div");
+    body.className = "column-body";
+
+    addDropZone(body, column.id, 0);
+    column.cards.forEach((cardId, cardIndex) => {
+      body.appendChild(createCard(cardId));
+      addDropZone(body, column.id, cardIndex + 1);
+      if (cardIndex < column.cards.length - 1) {
+        addRowDivider(body, cardId);
+      }
+    });
+
+    columnEl.appendChild(body);
+    poster.appendChild(columnEl);
+
+    if (columnIndex < state.columns.length - 1) {
+      const divider = document.createElement("div");
+      divider.className = "col-divider";
+      divider.addEventListener("mousedown", (event) => {
+        event.preventDefault();
+        const left = state.columns[columnIndex];
+        const right = state.columns[columnIndex + 1];
+        const leftStart = left.widthMm;
+        const rightStart = right.widthMm;
+        const startX = event.clientX;
+        const onMove = (moveEvent) => {
+          const deltaMm = (moveEvent.clientX - startX) / 3.7795275591;
+          left.widthMm = Math.max(160, Number((leftStart + deltaMm).toFixed(1)));
+          right.widthMm = Math.max(160, Number((rightStart - deltaMm).toFixed(1)));
+          render();
+        };
+        const onUp = () => {
+          window.removeEventListener("mousemove", onMove);
+          window.removeEventListener("mouseup", onUp);
+        };
+        window.addEventListener("mousemove", onMove);
+        window.addEventListener("mouseup", onUp);
+      });
+      poster.appendChild(divider);
+    }
+  });
+  root.appendChild(poster);
+}
+
+function saveConfigFile() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "poster-config.json";
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+async function copyConfig() {
+  await navigator.clipboard.writeText(JSON.stringify(state, null, 2));
+}
+
+function render() {
+  ensureColumnWidths();
+  applyPosterDimensions();
+  const root = document.getElementById("root");
+  root.innerHTML = "";
+  renderHeader(root);
+  renderColumns(root);
+  fitPosterToViewport();
+}
+
+window.posterAPI = {
+  getConfig: () => deepClone(state),
+  resetLayout: () => { state = deepClone(defaultState); render(); },
+  setFontScale: (scale) => { state.fontScale = scale; render(); },
+  setColumnWidth: (columnId, widthMm) => {
+    const column = state.columns.find((item) => item.id === columnId);
+    if (!column) return;
+    column.widthMm = widthMm;
+    render();
+  },
+  setCardHeight: (cardId, heightMm) => {
+    if (!state.cards[cardId]) return;
+    state.cards[cardId].heightMm = heightMm;
+    render();
+  },
+  moveCard,
+  swapCards,
+};
+
+document.getElementById("preview-toggle").addEventListener("click", () => {
+  document.body.classList.toggle("preview");
+});
+document.getElementById("font-down").addEventListener("click", () => {
+  state.fontScale = Math.max(0.7, Number((state.fontScale - 0.05).toFixed(2)));
+  render();
+});
+document.getElementById("font-up").addEventListener("click", () => {
+  state.fontScale = Math.min(1.8, Number((state.fontScale + 0.05).toFixed(2)));
+  render();
+});
+document.getElementById("save-config").addEventListener("click", saveConfigFile);
+document.getElementById("copy-config").addEventListener("click", copyConfig);
+document.getElementById("reset-config").addEventListener("click", () => {
+  state = deepClone(defaultState);
+  render();
+});
+
+window.addEventListener("resize", fitPosterToViewport);
+render();
+</script>
+</body>
+</html>
