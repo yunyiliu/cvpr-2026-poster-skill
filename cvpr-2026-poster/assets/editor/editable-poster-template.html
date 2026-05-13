@@ -37,6 +37,9 @@
     position: absolute;
     left: 0;
     top: 0;
+    will-change: transform;
+    backface-visibility: hidden;
+    contain: layout style;
   }
 
   @page { size: var(--poster-w) var(--poster-h); margin: 0; }
@@ -379,11 +382,10 @@
 <div id="root"></div>
 <script>
 const EMBEDDED_CONFIG = __POSTER_CONFIG__;
-const LS_KEY = "cvpr-2026-poster-config-v4";
+const LS_KEY = "cvpr-2026-poster-config-v5";
 try {
-  localStorage.removeItem("cvpr-2026-poster-config");
-  localStorage.removeItem("cvpr-2026-poster-config-v2");
-  localStorage.removeItem("cvpr-2026-poster-config-v3");
+  ["cvpr-2026-poster-config","cvpr-2026-poster-config-v2","cvpr-2026-poster-config-v3","cvpr-2026-poster-config-v4"]
+    .forEach((k) => localStorage.removeItem(k));
 } catch (e) {}
 
 const deepClone = (obj) => JSON.parse(JSON.stringify(obj));
@@ -712,15 +714,27 @@ function getWaste() {
   return { total: Number(total.toFixed(2)), details };
 }
 
-function render() {
+let _renderQueued = false;
+let _persistQueued = false;
+function persistStateDebounced() {
+  if (_persistQueued) return;
+  _persistQueued = true;
+  setTimeout(() => { _persistQueued = false; persistState(); }, 300);
+}
+function renderSync() {
   ensureColumnWidths();
   applyPosterDimensions();
   const root = document.getElementById("root");
   root.innerHTML = "";
   renderHeader(root);
   renderColumns(root);
-  persistState();
   fitPosterToViewport();
+  persistStateDebounced();
+}
+function render() {
+  if (_renderQueued) return;
+  _renderQueued = true;
+  requestAnimationFrame(() => { _renderQueued = false; renderSync(); });
 }
 
 window.posterAPI = {
