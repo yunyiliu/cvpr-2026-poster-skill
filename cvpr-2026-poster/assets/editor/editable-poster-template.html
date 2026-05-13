@@ -379,10 +379,11 @@
 <div id="root"></div>
 <script>
 const EMBEDDED_CONFIG = __POSTER_CONFIG__;
-const LS_KEY = "cvpr-2026-poster-config-v3";
+const LS_KEY = "cvpr-2026-poster-config-v4";
 try {
   localStorage.removeItem("cvpr-2026-poster-config");
   localStorage.removeItem("cvpr-2026-poster-config-v2");
+  localStorage.removeItem("cvpr-2026-poster-config-v3");
 } catch (e) {}
 
 const deepClone = (obj) => JSON.parse(JSON.stringify(obj));
