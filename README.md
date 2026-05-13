@@ -1,58 +1,61 @@
 # CVPR 2026 Poster Skill
 
-A reusable AI skill for turning a CVPR 2026 paper into an editable poster workspace under the official conference constraints.
+Turn a CVPR 2026 paper into a print-ready poster in minutes, not days.
 
-The generated output is not just a brief. It includes a browser-editable `poster/index.html` plus planning files and print checks.
+The skill scaffolds a workspace with:
 
-## 3-Minute Quick Start
+- LaTeX-extracted title, authors, affiliations, abstract, and figures
+- Auto-fetched institution logos (one per school)
+- A browser-editable HTML poster at the official CVPR 2026 size
+  (84"×42" Main / Findings, 42"×21" Workshop)
+- One-command export to print-ready PDF
 
-If you just want the shortest path, do this:
+You can drag column widths, swap card positions, and resize cards
+directly in the browser. Anything an agent (Claude Code, Codex, etc.)
+can write into `poster_brief.md` flows through to the poster.
 
-1. Clone the repo:
+---
+
+## How to start
+
+You need Python 3 and Google Chrome installed.
+
+### 1. Clone
 
 ```bash
 git clone https://github.com/yunyiliu/cvpr-2026-poster-skill.git
 cd cvpr-2026-poster-skill
 ```
 
-2. Create a workspace:
+### 2. Create a workspace
 
 ```bash
 python3 cvpr-2026-poster/scripts/init_poster_project.py \
   --project-dir ./poster-workspace \
-  --track main \
-  --paper-id 12345 \
-  --title "Your Paper Title"
+  --track main
 ```
 
-3. Put your assets here:
+`--track` is one of `main`, `findings`, or `workshop`.
 
-- figures: `poster-workspace/assets/figures/`
-- school or lab logos: `poster-workspace/assets/logos/`
-
-4. If you have Overleaf or LaTeX source, auto-fill the brief first:
+### 3. Auto-fill the brief from your LaTeX source
 
 ```bash
 python3 cvpr-2026-poster/scripts/fill_brief_from_latex.py \
   --project-dir ./poster-workspace \
-  --latex-dir ./overleaf \
+  --latex-dir /path/to/overleaf \
   --copy-figures
 ```
 
-Use `--overwrite` if you want the script to replace an already filled title or abstract in `poster_brief.md`.
+If your main file is not auto-detected, add `--main-tex camera_ready.tex`.
 
-5. Review or finish `poster-workspace/poster_brief.md`
+### 4. Edit `poster-workspace/poster_brief.md`
 
-If the paper has multiple schools or labs, list one institution website per school under `Institution websites, optional`, in the same order as `Affiliations`.
+Fill in (or trim) the story bullets, method bullets, results bullets,
+the metrics table, and **institution websites** (one URL per school,
+in the same order as `Affiliations` — these are used to auto-fetch
+logos).
 
-6. Sync the brief into the editable poster:
-
-```bash
-python3 cvpr-2026-poster/scripts/sync_poster_from_brief.py \
-  --project-dir ./poster-workspace
-```
-
-If you do not have school or lab logos yet, use:
+### 5. Sync the brief into the editable poster
 
 ```bash
 python3 cvpr-2026-poster/scripts/sync_poster_from_brief.py \
@@ -60,585 +63,147 @@ python3 cvpr-2026-poster/scripts/sync_poster_from_brief.py \
   --fetch-logos-if-missing
 ```
 
-7. Open the editable poster:
+This generates `poster/index.html` and `poster/poster-config.json`,
+copies figures and logos into place, and fetches institution logos
+from their websites if you have not added any yet.
+
+### 6. Open and edit in the browser
 
 ```bash
 open poster-workspace/poster/index.html
 ```
 
-7. If you are using Codex or Claude Code, ask the agent to refine the generated poster.
+In the editor you can:
 
-That is the main workflow. Everything else in this README is detail and optional customization.
+- Drag the divider between columns to change column widths
+- Drag the divider between cards to change card heights
+- Drag a card's `◆` handle onto a drop zone, or click two handles
+  in sequence, to move or swap cards
+- Use `A+` / `A-` to scale all fonts globally
+- Click **Save** to download the current `poster-config.json` (your
+  layout edits live in browser localStorage until you do this)
 
-What the sync step now does automatically:
+If you are using Claude Code or Codex, just tell the agent what you
+want changed and it will edit the brief or call `posterAPI` on the
+running editor.
 
-- fills `poster/index.html`
-- fills `poster/poster-config.json`
-- copies displayable figures into `poster/figures/`
-- copies user logos into `poster/logos/`
-- generates a live QR image URL from `QR target`
-- runs an image-aware layout optimization pass
+### 7. Export to PDF
 
-If `--fetch-logos-if-missing` is used, it will also try to download institution logos into `assets/logos/auto/`.
-When multiple institutions are listed, it will try to fetch one logo per institution.
-
-It is designed for two use cases:
-
-- `Codex` / OpenAI skill workflows
-- `Claude Code` style skill workflows
-
-The skill focuses on practical poster work:
-
-- official CVPR 2026 size and printing constraints
-- converting a paper into a 5 to 10 minute poster story
-- adapting the official CVPR template as a style reference
-- handling missing project URLs by falling back to paper or code links
-- generating reusable working files for figures, notes, and print review
-- generating a self-contained editable HTML poster you can open locally
-
-This repo now supports both:
-
-- bundled official assets shipped inside the skill
-- user-supplied template and logo overrides
-
-## Official asset source
-
-If you have access to the official CVPR 2026 poster assets, use this Google Drive folder as the canonical source for templates, logos, and related conference artwork:
-
-- `https://drive.google.com/drive/folders/1oaXlMOJzWMYUiFBImMepKsZcoicpks8Z`
-
-Recommended workflow:
-
-- export the official poster template to `PDF` or `PPTX`
-- put exported templates into `references/`
-- put logos into `assets/logos/`
-- mention in your prompt which file should be treated as the primary style reference
-
-## Built-in assets and override order
-
-The skill now ships with bundled official assets:
-
-- `cvpr-2026-poster/assets/official/templates/CVPR MAIN & FINDINGS Poster Template.pptx`
-- `cvpr-2026-poster/assets/official/templates/CVPR Workshop ONLY Poster Template.pptx`
-- `cvpr-2026-poster/assets/official/logos/CVPR_Logo2_Denver 2026_Color.eps`
-- `cvpr-2026-poster/assets/official/logos/CVPR_Logo2_Denver_2026_Preview.svg`
-
-When the agent looks for style assets, use this priority:
-
-1. user-provided workspace files
-2. bundled official assets inside the skill
-3. the official CVPR shared Drive folder
-
-User-provided files always win. That means:
-
-- if the user puts a custom template in their workspace, use that instead of the bundled one
-- if the user puts custom logos in `assets/logos/`, use those instead of bundled logos
-- if the user provides nothing, fall back to the bundled official template and bundled official logo
-
-Important:
-
-- the bundled logo is only the conference branding
-- users should still put their school, lab, or company logos into `assets/logos/`
-- those institution logos should be added to the poster header when appropriate
-
-## Who this is for
-
-Use this if you are:
-
-- preparing a `CVPR 2026` Main, Findings, or Workshop poster
-- using `Codex` or `Claude Code` and want a reusable poster workflow
-- starting from a paper plus a few figures instead of a finished poster
-- trying to match the official CVPR template style without manually rebuilding everything from scratch
-
-## What is included
-
-```text
-cvpr-2026-poster/
-├── SKILL.md
-├── agents/openai.yaml
-├── assets/
-│   ├── editor/
-│   │   └── editable-poster-template.html
-│   └── official/
-│       ├── logos/
-│       └── templates/
-├── references/
-│   ├── cvpr-2026-spec.md
-│   ├── poster-brief-template.md
-│   └── print-checklist.md
-└── scripts/
-    ├── fill_brief_from_latex.py
-    ├── fetch_institution_logos.py
-    ├── init_poster_project.py
-    ├── optimize_poster_layout.py
-    ├── poster_image_utils.py
-    └── sync_poster_from_brief.py
-```
-
-## Install
-
-## Which tool should I use?
-
-This repo supports two different AI-agent environments:
-
-- `Codex`: use this if you work in the OpenAI Codex environment and your local skills live under `~/.codex/skills/`
-- `Claude Code`: use this if you work in Anthropic Claude Code and your local skills live under `.claude/skills/` or your Claude user skill directory
-
-Use only the install path for the tool you actually use. You do not need both.
-
-Important distinction:
-
-- terminal commands such as `git clone`, `cp`, and `python3 .../init_poster_project.py` are run in your shell
-- prompts such as `Use $cvpr-2026-poster ...` are typed inside the AI agent session after the skill is installed
-
-This repo does not require a special shell command like `codex cvpr-2026-poster` or `claude cvpr-2026-poster`.
-You install the skill first, then call it from inside your agent conversation.
-
-### Codex
-
-Copy `cvpr-2026-poster/` into your Codex skills directory, for example:
+After clicking **Save** in the editor, run:
 
 ```bash
-cp -R cvpr-2026-poster ~/.codex/skills/
+cd poster-workspace
+bash bake_and_export.sh
 ```
 
-When to use this path:
+This will:
 
-- you are already working in Codex
-- you want Codex to read your poster workspace and draft the brief or outline
+1. Pick up the newest `poster-config.json` from `~/Downloads/`
+2. Re-embed it into `poster/index.html`
+3. Run headless Chrome to produce `poster.pdf` at the exact poster size
 
-After copying the skill:
-
-1. start a new Codex session
-2. open the folder that contains your poster materials
-3. type a prompt such as:
-
-```text
-Use $cvpr-2026-poster to turn my paper into a 4-column CVPR 2026 poster brief.
-```
-
-### Claude Code
-
-Copy `cvpr-2026-poster/` into `.claude/skills/` in your project or user-level Claude skills directory:
+Pass an explicit path if the JSON is elsewhere:
 
 ```bash
-mkdir -p .claude/skills
-cp -R cvpr-2026-poster .claude/skills/
+bash bake_and_export.sh /path/to/poster-config.json
 ```
 
-When to use this path:
-
-- you are already working in Claude Code
-- you want Claude Code to use the skill while reading your paper files and figures
-
-After copying the skill:
-
-1. start a new Claude Code session
-2. open the project that contains your poster materials
-3. type a prompt such as:
-
-```text
-Use the cvpr-2026-poster skill to adapt the official CVPR 2026 template to my paper.
-```
-
-You can also usually say:
-
-```text
-Use $cvpr-2026-poster to build a CVPR 2026 poster outline from my files.
-```
-
-## If you are not using Codex or Claude Code
-
-You can still use the scaffold script by itself:
-
-```bash
-python3 cvpr-2026-poster/scripts/init_poster_project.py \
-  --project-dir ./poster-workspace \
-  --track main \
-  --paper-id 12345 \
-  --title "Your Paper Title"
-```
-
-In that case, you can still use:
-
-- `init_poster_project.py`
-- `sync_poster_from_brief.py`
-- `poster/index.html`
-
-So the editable poster workflow still works. The only missing part is agent-assisted refinement from Codex or Claude Code.
-
-## Usage
-
-This skill is designed to produce working poster materials, not just general advice.
-
-### 1. Create a workspace
-
-Run the scaffold script:
-
-```bash
-python3 cvpr-2026-poster/scripts/init_poster_project.py \
-  --project-dir ./poster-workspace \
-  --track main \
-  --paper-id 12345 \
-  --title "Your Paper Title"
-```
-
-This creates:
-
-```text
-poster-workspace/
-├── assets/
-│   ├── figures/
-│   └── logos/
-├── output/
-├── poster/
-│   ├── index.html
-│   ├── poster-config.json
-│   ├── figures/
-│   └── logos/
-├── references/
-│   └── notes.md
-├── poster_brief.md
-├── poster_outline.md
-└── print_checklist.md
-```
-
-If you run `fill_brief_from_latex.py`, it also writes `references/latex-extract.md`.
-
-### 2. Put your materials into the workspace
-
-- `assets/figures/`
-- `assets/logos/`
-- `references/`
-
-Recommended materials:
-
-- your Overleaf or LaTeX source
-- final title, authors, affiliations, and paper ID
-- 3 to 6 must-have figures
-- one main results table
-- an official template export in `PDF` or `PPTX` if you want to override the bundled template
-- a QR target link such as arXiv, GitHub, a lab page, or a demo page
-- any CVPR logo, acronym, or poster header assets exported from the official Drive folder
-- your school, lab, or company logos in `assets/logos/`
-If you do not provide a template, the skill will use the bundled official template for the selected track by default.
-
-Recommended figure filenames for auto-fill:
-
-- `overview.png` or `method.png`
-- `results.png`
-- `qualitative.png`
-
-The sync script looks for these names first when filling the editable poster cards.
-
-You can also explicitly control figure assignment in `poster_brief.md`:
-
-```md
-## Must-have figures
-
-- Figure 1: overview.png
-- Figure 2: results.png
-- Figure 3: qualitative.png
-```
-
-If these are present, the sync script uses them before filename guessing.
-
-### 3. Fill `poster_brief.md`
-
-If you already have an Overleaf or LaTeX project, prefer auto-filling first:
-
-```bash
-python3 cvpr-2026-poster/scripts/fill_brief_from_latex.py \
-  --project-dir ./poster-workspace \
-  --latex-dir ./overleaf \
-  --copy-figures
-```
-
-This script tries to:
-
-- find the main `.tex` file
-- extract the title, authors, affiliations, and abstract
-- detect figure files and copy displayable ones into `assets/figures/`
-- fill `Figure 1` to `Figure 4` in `poster_brief.md`
-- write a figure and caption summary to `references/latex-extract.md`
-- let `sync_poster_from_brief.py` reuse those extracted captions in the figure cards
-
-If `poster_brief.md` already has real values that you want replaced, add `--overwrite`.
-
-At minimum, fill these fields:
-
-- `Title`
-- `Authors`
-- `Affiliations`
-- `Institution websites, optional` if you want more reliable auto logo fetches
-  Put one website per institution, in the same order as `Affiliations`, when the paper has multiple schools or labs.
-- `QR target`
-- `One-sentence takeaway`
-- `Problem`
-- `Core idea`
-- `Main result`
-- `Method bullets`
-- `Results bullets`
-- `Conclusion bullets`
-
-After running the LaTeX fill step, you usually only need to clean up the extracted text and add links, metrics, and institution websites.
-
-### 4. Sync the brief into the editable poster
-
-Run:
-
-```bash
-python3 cvpr-2026-poster/scripts/sync_poster_from_brief.py \
-  --project-dir ./poster-workspace
-```
-
-This updates:
-
-- `poster/poster-config.json`
-- `poster/index.html`
-- copied user logos under `poster/logos/`
-- copied displayable figures under `poster/figures/`
-- auto-generated QR image URL from `QR target`
-- column widths and figure card heights based on image aspect ratios
-
-If you want the sync step to also try downloading school or lab logos, run:
-
-```bash
-python3 cvpr-2026-poster/scripts/sync_poster_from_brief.py \
-  --project-dir ./poster-workspace \
-  --fetch-logos-if-missing
-```
-
-This works best when `poster_brief.md` lists one institution website per school or lab in the same order as `Affiliations`.
-
-If you want to fetch missing logos before syncing, you can also run:
-
-```bash
-python3 cvpr-2026-poster/scripts/fetch_institution_logos.py \
-  --project-dir ./poster-workspace
-```
-
-### 4.5 Run the optimizer again if you change figures
-
-If you later replace or add images, rerun:
-
-```bash
-python3 cvpr-2026-poster/scripts/optimize_poster_layout.py \
-  --project-dir ./poster-workspace
-```
-
-This is optional because `sync_poster_from_brief.py` already runs the optimizer once.
-
-### 5. Ask the agent to use the skill
-
-Use one of these prompts:
-
-```text
-Use $cvpr-2026-poster to turn my paper into a CVPR 2026 poster brief.
-```
-
-```text
-Use $cvpr-2026-poster to build a 4-column poster plan from my Overleaf folder and figures.
-```
-
-```text
-Use $cvpr-2026-poster to adapt the official CVPR 2026 template and prepare a print checklist.
-```
-
-### 6. What the skill should produce
-
-The expected outputs are:
-
-- `poster/index.html`
-- `poster/poster-config.json`
-- `poster_brief.md`
-- `poster_outline.md`
-- `print_checklist.md`
-- `references/latex-extract.md` when LaTeX extraction is used
-- a recommended section structure for the poster
-- concrete guidance on which figures and numbers to emphasize
-- automatic use of the bundled official template when no override is supplied
-- a generated `poster/index.html` visual editor with room for your institution logos
-
-### 7. Edit and export the poster
-
-Open the generated poster directly in your browser:
-
-```bash
-open poster-workspace/poster/index.html
-```
-
-The editor is meant for layout iteration:
-
-- resize columns
-- resize card heights
-- move cards between columns
-- click one card handle, then another, to swap cards
-- load a pasted config JSON
-- save or copy the current layout config
-- inspect layout waste through `window.posterAPI.getWaste()`
-- export the final result to `PDF`
-
-The planning files still matter, but the repo now also ships an actual editable poster layer.
-
-### 8. Smallest possible test
-
-If you want to test quickly before using your real paper:
-
-1. Run `init_poster_project.py`
-2. Optionally run `fill_brief_from_latex.py` if you have an Overleaf folder
-3. Edit only `Title`, `Authors`, `Affiliations`, `Problem`, and `Core idea` in `poster_brief.md`
-4. Run `sync_poster_from_brief.py`
-5. Open `poster/index.html`
-
-If that works, the repo is installed correctly.
-
-## Recommended inputs
-
-- Overleaf or LaTeX paper source
-- title, authors, affiliations, paper ID
-- 3 to 6 must-have figures
-- one main results table
-- official template exported as `PDF` or `PPTX` if you want visual matching
-- QR target link such as arXiv, GitHub, lab page, or demo page
-
-## No project page
-
-If you do not have a project website yet, use one of these for the QR target:
-
-- arXiv page
-- GitHub repository
-- lab page
-- personal page
-- demo or video page
-
-The skill is written to handle this case directly.
-
-## What makes the output CVPR-specific
-
-The bundled references encode:
-
-- the official `84in x 42in` Main and Findings poster size
-- the official `42in x 21in` Workshop poster size
-- the recommendation to use `3` or `4` columns
-- the guidance to keep text light and figures large
-- the print export and job-name requirements
-- the main conference poster page upload reminder
-
-## Example end-to-end workflow
-
-1. Copy the skill into your AI tool.
-2. Run `init_poster_project.py`.
-3. If you have Overleaf or LaTeX source, run `fill_brief_from_latex.py`.
-4. Open `poster/index.html` to verify the editable poster scaffold is there.
-5. Drop figures, links, and school logos into the scaffolded workspace.
-6. Ask the agent to fill `poster/index.html`, `poster_brief.md`, and `poster_outline.md`.
-7. Use `print_checklist.md` before exporting the final PDF.
-
-## Export to PDF for printing
-
-Each generated workspace ships with two helper scripts that drive
-headless Chrome to produce a print-ready PDF at the exact poster size
-(84"×42" for Main / Findings, 42"×21" for Workshop). They expect Google
-Chrome installed at the macOS default path
-`/Applications/Google Chrome.app/`. Adjust the `CHROME=` line if you
-use a different binary.
-
-### Workflow
-
-1. Open `poster/index.html` in a browser and edit until it looks right.
-   When you drag column widths or card heights, those tweaks live in
-   `localStorage` only — the browser doesn't write them back to disk.
-2. Click the toolbar's **Save** button. The browser downloads
-   `poster-config.json` (with all your width / height edits) to
-   `~/Downloads/`.
-3. From a terminal:
-
-   ```bash
-   cd /path/to/your/poster-workspace
-   bash bake_and_export.sh
-   ```
-
-   `bake_and_export.sh` will:
-   - find the newest `poster-config.json` in `~/Downloads/`,
-   - copy it into `poster/poster-config.json`,
-   - re-embed it into `poster/index.html` so headless Chrome sees the
-     same layout the browser was showing, and
-   - run `export_pdf.sh` to produce `poster.pdf` in the workspace root.
-
-   Pass an explicit path if the JSON isn't in `~/Downloads/`:
-
-   ```bash
-   bash bake_and_export.sh /path/to/poster-config.json
-   ```
-
-4. Verify the PDF dimensions — for a Main / Findings poster you should
-   see exactly **84.01" × 42.01"** in the print dialog or the file's
-   metadata. Apple Preview shows this under *Tools → Show Inspector*.
-
-### Skipping Step 2 ("save & bake")
-
-If you haven't touched layout in the browser since the last sync, just
-run:
+If you have not changed layout in the browser since the last sync,
+skip the bake step:
 
 ```bash
 bash export_pdf.sh
 ```
 
-That uses the on-disk `poster/poster-config.json` as-is and writes
-`poster.pdf` straight to the workspace root.
+Verify the PDF dimensions — for a Main / Findings poster the page
+should be exactly **84.01" × 42.01"**.
 
-### Why not Chrome's "Save as PDF" from File → Print
+---
 
-Chrome's print dialog defaults to Letter (8.5"×11") paper. The poster's
-`@page` CSS rule asks for 84"×42" but the dialog overrides it unless
-you manually create a custom paper size in macOS *System Settings →
-Printers & Scanners → Manage Custom Sizes*. Headless Chrome via
-`export_pdf.sh` honors `@page` natively, so the helper scripts are the
-reliable path.
+## What is in the workspace
 
-### Print-resolution notes
+```
+poster-workspace/
+├── poster_brief.md         ← you edit this
+├── poster_outline.md       ← optional planning notes
+├── print_checklist.md      ← preflight before sending to the printer
+├── assets/
+│   ├── figures/            ← copies of figures referenced in the paper
+│   └── logos/              ← school / lab logos (user-supplied or fetched)
+├── poster/
+│   ├── index.html          ← the editable poster, open in a browser
+│   ├── poster-config.json  ← serialized layout + content
+│   ├── figures/            ← display copies of figures
+│   └── logos/
+│       ├── user/           ← school logos (rendered top-left of header)
+│       └── official/       ← CVPR conference logo (rendered top-right)
+├── references/
+│   └── latex-extract.md    ← summary of what was pulled from LaTeX
+├── export_pdf.sh           ← headless-Chrome PDF export
+└── bake_and_export.sh      ← bake current layout, then export
+```
 
-`export_pdf.sh` embeds images at their **native pixel resolution** —
-Chrome does not upsample. A figure that is 1600 px wide and is
-displayed at 200 mm (≈ 7.87") on the poster prints at ~203 DPI, which
-is acceptable for poster viewing distance but below the 300 DPI
-threshold some printers prefer for fine detail. For the sharpest
-result:
+---
 
-- Render figures from the source paper at the highest resolution you
-  can (re-export from matplotlib with `dpi=300`, re-render TikZ as PDF
-  then rasterize at 300 DPI, etc.).
+## Programmatic editing from the agent
+
+While the poster is open in the browser, an agent can call methods on
+`window.posterAPI` to make targeted edits without a full sync. Useful
+endpoints:
+
+- `setCardHtml(cardId, html)` — replace a card's body
+- `setCardTitle(cardId, title)` — rename a card
+- `setCardAccent(cardId, color)` — recolor a card's top accent bar
+- `moveCard(cardId, columnId, index)` — relocate a card
+- `swapCards(a, b)` — swap two cards
+- `setColumns(columns)` — restructure the column layout
+- `setLogos([...])` / `setConferenceLogos([...])` — replace logos
+- `setHeader({ title, authors, affiliations, badge })` — update the header
+- `getConfig()` / `exportConfig()` — read the current state
+- `resetLayout()` — discard local edits, revert to the embedded config
+
+---
+
+## CVPR 2026 size and format reference
+
+| Track | Poster size | Aspect ratio | Notes |
+|-------|-------------|--------------|-------|
+| Main, Findings | 84" × 42" (2134 × 1067 mm) | 2 : 1 landscape | Default 4-column |
+| Workshop | 42" × 21" (1067 × 533 mm) | 2 : 1 landscape | Default 3-column |
+
+Output should be PDF with **no bleed**. The bundled `export_pdf.sh`
+honors the poster's `@page` CSS so the page size matches exactly.
+
+---
+
+## Why headless Chrome, not File → Print
+
+Chrome's print dialog defaults to Letter paper and silently downscales
+the 84"×42" poster unless you create a matching custom paper size in
+*System Settings → Printers & Scanners → Manage Custom Sizes*.
+`export_pdf.sh` uses Chrome in headless mode, which honors the
+`@page { size: 84in 42in; margin: 0; }` declaration directly.
+
+---
+
+## Print-resolution notes
+
+Images are embedded at native pixel resolution. Vector content (text,
+SVG logos, gradients, table borders) stays sharp at any zoom.
+
+To maximize print sharpness:
+
+- Re-render figures from the paper at high DPI (matplotlib `dpi=300`,
+  TikZ → PDF → rasterize at 300 DPI, etc.)
 - Drop the high-res copies into `assets/figures/` and re-run
-  `sync_poster_from_brief.py`.
-- Text, gradients, and the CVPR / institution SVG logos remain vector
-  in the PDF and stay sharp at any zoom regardless of source DPI.
+  `sync_poster_from_brief.py`
 
-### Converting to PowerPoint
+A figure that is 1600 px wide displayed at 200 mm prints at ~203 DPI,
+which is fine for poster viewing but below the 300 DPI threshold some
+printers prefer.
 
-The HTML editor and the PDF export are the native formats; PPTX is a
-lossy detour. If a venue insists on PPTX:
-
-- Cleanest: use Adobe Acrobat (online or desktop) *Convert → PDF to
-  PowerPoint*. Free alternatives such as Smallpdf or iLovePDF work too.
-  Expect each card to come through as an image block — text inside the
-  PPTX won't be re-editable.
-- Simplest: open `poster.pdf` in Preview, *File → Export* to PNG at
-  300 DPI, then place that single image on one 84×42 PPTX slide.
-
-For real submissions, just send the printer or the conference upload
-form the PDF.
-
-## Notes
-
-- The bundled CVPR 2026 spec was verified against official CVPR pages on `2026-05-13`.
-- Before ordering prints, verify the latest conference page in case deadlines or upload links change.
-- The skill treats Google Slides or PowerPoint templates as style references unless the user explicitly wants the final artifact to remain editable in Slides or PPT.
-
-## Example
-
-See [examples/cvpr-poster-brief-example.md](examples/cvpr-poster-brief-example.md) for a filled example based on a generic CVPR-style medical vision paper.
+---
 
 ## License
 
-MIT
+MIT. See [LICENSE](LICENSE).
