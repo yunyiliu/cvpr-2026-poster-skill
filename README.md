@@ -30,11 +30,22 @@ python3 cvpr-2026-poster/scripts/init_poster_project.py \
 - figures: `poster-workspace/assets/figures/`
 - school or lab logos: `poster-workspace/assets/logos/`
 
-4. Fill `poster-workspace/poster_brief.md`
+4. If you have Overleaf or LaTeX source, auto-fill the brief first:
+
+```bash
+python3 cvpr-2026-poster/scripts/fill_brief_from_latex.py \
+  --project-dir ./poster-workspace \
+  --latex-dir ./overleaf \
+  --copy-figures
+```
+
+Use `--overwrite` if you want the script to replace an already filled title or abstract in `poster_brief.md`.
+
+5. Review or finish `poster-workspace/poster_brief.md`
 
 If the paper has multiple schools or labs, list one institution website per school under `Institution websites, optional`, in the same order as `Affiliations`.
 
-5. Sync the brief into the editable poster:
+6. Sync the brief into the editable poster:
 
 ```bash
 python3 cvpr-2026-poster/scripts/sync_poster_from_brief.py \
@@ -49,7 +60,7 @@ python3 cvpr-2026-poster/scripts/sync_poster_from_brief.py \
   --fetch-logos-if-missing
 ```
 
-6. Open the editable poster:
+7. Open the editable poster:
 
 ```bash
 open poster-workspace/poster/index.html
@@ -156,6 +167,7 @@ cvpr-2026-poster/
 │   ├── poster-brief-template.md
 │   └── print-checklist.md
 └── scripts/
+    ├── fill_brief_from_latex.py
     ├── fetch_institution_logos.py
     ├── init_poster_project.py
     ├── optimize_poster_layout.py
@@ -291,6 +303,8 @@ poster-workspace/
 └── print_checklist.md
 ```
 
+If you run `fill_brief_from_latex.py`, it also writes `references/latex-extract.md`.
+
 ### 2. Put your materials into the workspace
 
 - `assets/figures/`
@@ -331,6 +345,26 @@ If these are present, the sync script uses them before filename guessing.
 
 ### 3. Fill `poster_brief.md`
 
+If you already have an Overleaf or LaTeX project, prefer auto-filling first:
+
+```bash
+python3 cvpr-2026-poster/scripts/fill_brief_from_latex.py \
+  --project-dir ./poster-workspace \
+  --latex-dir ./overleaf \
+  --copy-figures
+```
+
+This script tries to:
+
+- find the main `.tex` file
+- extract the title, authors, affiliations, and abstract
+- detect figure files and copy displayable ones into `assets/figures/`
+- fill `Figure 1` to `Figure 4` in `poster_brief.md`
+- write a figure and caption summary to `references/latex-extract.md`
+- let `sync_poster_from_brief.py` reuse those extracted captions in the figure cards
+
+If `poster_brief.md` already has real values that you want replaced, add `--overwrite`.
+
 At minimum, fill these fields:
 
 - `Title`
@@ -346,6 +380,8 @@ At minimum, fill these fields:
 - `Method bullets`
 - `Results bullets`
 - `Conclusion bullets`
+
+After running the LaTeX fill step, you usually only need to clean up the extracted text and add links, metrics, and institution websites.
 
 ### 4. Sync the brief into the editable poster
 
@@ -418,6 +454,7 @@ The expected outputs are:
 - `poster_brief.md`
 - `poster_outline.md`
 - `print_checklist.md`
+- `references/latex-extract.md` when LaTeX extraction is used
 - a recommended section structure for the poster
 - concrete guidance on which figures and numbers to emphasize
 - automatic use of the bundled official template when no override is supplied
@@ -449,9 +486,10 @@ The planning files still matter, but the repo now also ships an actual editable 
 If you want to test quickly before using your real paper:
 
 1. Run `init_poster_project.py`
-2. Edit only `Title`, `Authors`, `Affiliations`, `Problem`, and `Core idea` in `poster_brief.md`
-3. Run `sync_poster_from_brief.py`
-4. Open `poster/index.html`
+2. Optionally run `fill_brief_from_latex.py` if you have an Overleaf folder
+3. Edit only `Title`, `Authors`, `Affiliations`, `Problem`, and `Core idea` in `poster_brief.md`
+4. Run `sync_poster_from_brief.py`
+5. Open `poster/index.html`
 
 If that works, the repo is installed correctly.
 
@@ -491,10 +529,11 @@ The bundled references encode:
 
 1. Copy the skill into your AI tool.
 2. Run `init_poster_project.py`.
-3. Open `poster/index.html` to verify the editable poster scaffold is there.
-4. Drop figures, links, and school logos into the scaffolded workspace.
-5. Ask the agent to fill `poster/index.html`, `poster_brief.md`, and `poster_outline.md`.
-6. Use `print_checklist.md` before exporting the final PDF.
+3. If you have Overleaf or LaTeX source, run `fill_brief_from_latex.py`.
+4. Open `poster/index.html` to verify the editable poster scaffold is there.
+5. Drop figures, links, and school logos into the scaffolded workspace.
+6. Ask the agent to fill `poster/index.html`, `poster_brief.md`, and `poster_outline.md`.
+7. Use `print_checklist.md` before exporting the final PDF.
 
 ## Notes
 

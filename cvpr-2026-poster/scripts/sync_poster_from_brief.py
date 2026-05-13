@@ -88,14 +88,16 @@ def get_value(sections: dict[str, dict[str, object]], section: str, key: str) ->
 def get_list(sections: dict[str, dict[str, object]], section: str, key: str) -> list[str]:
     value = sections.get(section, {}).get(key, [])
     if isinstance(value, list):
-        return [item.strip() for item in value if item and item.strip()]
-    return [str(value).strip()] if str(value).strip() else []
+        return [item.strip() for item in value if item and item.strip() and item.strip() != "-"]
+    cleaned = str(value).strip()
+    return [cleaned] if cleaned and cleaned != "-" else []
 
 
 def bullet_html(items: list[str]) -> str:
-    if not items:
+    cleaned = [item.strip() for item in items if item and item.strip() and item.strip() != "-"]
+    if not cleaned:
         return ""
-    lis = "".join(f"<li>{escape_html(item)}</li>" for item in items)
+    lis = "".join(f"<li>{escape_html(item)}</li>" for item in cleaned)
     return f"<ul>{lis}</ul>"
 
 
@@ -213,6 +215,30 @@ def explicit_figure_list(sections: dict[str, dict[str, object]]) -> list[str]:
     return [value for _, value in ordered]
 
 
+def load_latex_caption_map(project_dir: Path) -> dict[str, str]:
+    summary_path = project_dir / "references" / "latex-extract.md"
+    if not summary_path.exists():
+        return {}
+
+    captions: dict[str, str] = {}
+    current_name = ""
+    for raw_line in summary_path.read_text(encoding="utf-8").splitlines():
+        figure_match = re.match(r"^- Figure \d+:\s+`(.+?)`\s*$", raw_line)
+        if figure_match:
+            current_name = Path(figure_match.group(1)).name
+            continue
+        caption_match = re.match(r"^\s+- Caption:\s+(.+?)\s*$", raw_line)
+        if caption_match and current_name:
+            captions[current_name] = caption_match.group(1).strip()
+    return captions
+
+
+def figure_caption(rel_path: str | None, caption_map: dict[str, str], fallback: str) -> str:
+    if not rel_path:
+        return fallback
+    return caption_map.get(Path(rel_path).name, fallback)
+
+
 def pick_figure(figures: list[str], keywords: tuple[str, ...], used: set[str]) -> str | None:
     for rel_path in figures:
         name = Path(rel_path).name.lower()
@@ -275,6 +301,7 @@ def main() -> None:
     user_logo_paths = copy_user_logos(project_dir)
     figure_paths = copy_figure_assets(project_dir)
     used_figures: set[str] = set()
+    caption_map = load_latex_caption_map(project_dir)
 
     config["title"] = get_value(sections, "Paper", "Title") or config.get("title", "")
     config["authors"] = get_value(sections, "Paper", "Authors") or config.get("authors", "")
@@ -339,7 +366,7 @@ def main() -> None:
         ]
     )
 
-    overview_caption = "Main method overview figure."
+    overview_caption = figure_caption(overview_fig, caption_map, "Main method overview figure.")
     config["cards"]["overview"]["html"] = "".join(
         [
             figure_card_html(overview_fig, overview_caption, "Add a main overview figure to assets/figures/ and rerun sync."),
@@ -352,7 +379,7 @@ def main() -> None:
 
     config["cards"]["results"]["html"] = "".join(
         [
-            figure_card_html(results_fig, "Main results figure or table screenshot.", "Add a results figure to assets/figures/ and rerun sync."),
+            figure_card_html(results_fig, figure_caption(results_fig, caption_map, "Main results figure or table screenshot."), "Add a results figure to assets/figures/ and rerun sync."),
             bullet_html(results_bullets),
             para_html(main_result),
         ]
@@ -360,7 +387,7 @@ def main() -> None:
 
     config["cards"]["qualitative"]["html"] = "".join(
         [
-            figure_card_html(qualitative_fig, "Qualitative examples or failure analysis.", "Add a qualitative figure to assets/figures/ and rerun sync."),
+            figure_card_html(qualitative_fig, figure_caption(qualitative_fig, caption_map, "Qualitative examples or failure analysis."), "Add a qualitative figure to assets/figures/ and rerun sync."),
             para_html(conclusion),
         ]
     )

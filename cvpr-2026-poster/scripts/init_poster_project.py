@@ -421,10 +421,11 @@ def main() -> None:
     print("1. Add figures to assets/figures/")
     print("2. Add school or lab logos to assets/logos/")
     print("   If the paper has multiple institutions, prepare one logo or one website per institution.")
-    print("3. Add an override template to references/ if needed")
-    print("4. Open poster/index.html to edit the generated poster")
-    print("5. Fill poster_brief.md and poster_outline.md")
-    print("6. Export the final poster as PDF with no bleed")
+    print("3. If you have Overleaf or LaTeX source, run fill_brief_from_latex.py")
+    print("4. Add an override template to references/ if needed")
+    print("5. Open poster/index.html to edit the generated poster")
+    print("6. Fill poster_brief.md and poster_outline.md")
+    print("7. Export the final poster as PDF with no bleed")
 
 
 if __name__ == "__main__":

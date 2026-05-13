@@ -25,10 +25,11 @@ This skill turns a paper, a few figures, and optional template assets into a CVP
 Use the skill in three phases:
 
 1. Create or organize a poster workspace.
-2. Fill `poster_brief.md` with paper facts, figures, links, style constraints, and institution logos.
-3. Run `scripts/sync_poster_from_brief.py` to seed `poster/index.html` and `poster/poster-config.json`.
-4. Let the built-in optimizer adjust the first draft from figure aspect ratios.
-5. Ask the agent to refine the generated poster, not start from scratch.
+2. If an Overleaf or LaTeX folder exists, run `scripts/fill_brief_from_latex.py` before hand-editing the brief.
+3. Fill `poster_brief.md` with paper facts, figures, links, style constraints, and institution logos.
+4. Run `scripts/sync_poster_from_brief.py` to seed `poster/index.html` and `poster/poster-config.json`.
+5. Let the built-in optimizer adjust the first draft from figure aspect ratios.
+6. Ask the agent to refine the generated poster, not start from scratch.
 
 Typical prompts:
 
@@ -61,6 +62,7 @@ Ask for or infer these before drafting:
 - school, lab, or company logos when the header should show institution branding
 - institution website URLs when the user wants the agent to try auto-fetching missing logos
   When there are multiple institutions, prefer one website per institution in the same order as `Affiliations`.
+- Overleaf or LaTeX source when the user wants the brief auto-filled from the paper
 
 If the user has no project website, use one of these as the QR target:
 
@@ -97,6 +99,7 @@ The generated output should include:
 - `poster/poster-config.json` as the saved layout and content config
 - `poster/logos/` for conference and institution logos
 - `poster/figures/` for copied figures used by the poster
+- `references/latex-extract.md` when `fill_brief_from_latex.py` is used
 - a generated QR image URL when `QR target` is present in `poster_brief.md`
 - a first-pass layout optimized from local figure aspect ratios
 
@@ -167,6 +170,20 @@ python3 scripts/init_poster_project.py --project-dir ./poster-workspace --track 
 ```
 
 The scaffold script will copy bundled official assets into the workspace when they are available for the selected track.
+
+If the user has Overleaf or LaTeX source, prefer seeding the brief with:
+
+```bash
+python3 scripts/fill_brief_from_latex.py --project-dir ./poster-workspace --latex-dir ./overleaf --copy-figures
+```
+
+That script will try to:
+
+- find the main `.tex` file automatically
+- extract title, authors, affiliations, and abstract
+- copy displayable figures into `assets/figures/`
+- write a figure and caption summary into `references/latex-extract.md`
+- let the later sync step reuse extracted figure captions inside the poster cards
 
 After editing `poster_brief.md`, sync it with:
 
