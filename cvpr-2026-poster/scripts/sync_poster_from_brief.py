@@ -16,6 +16,7 @@ from pathlib import Path
 from urllib.parse import quote, urlparse
 
 from init_poster_project import TRACK_SPECS, write_editable_poster
+from optimize_poster_layout import optimize_project
 
 DISPLAY_EXTS = {".png", ".jpg", ".jpeg", ".svg", ".webp", ".gif"}
 
@@ -192,6 +193,24 @@ def copy_figure_assets(project_dir: Path) -> list[str]:
     return rel_paths
 
 
+def explicit_figure_list(sections: dict[str, dict[str, object]]) -> list[str]:
+    figures = sections.get("Must-have figures", {})
+    ordered: list[tuple[int, str]] = []
+    for key, value in figures.items():
+        match = re.match(r"Figure\s+(\d+)", key, re.IGNORECASE)
+        if not match:
+            continue
+        text = ""
+        if isinstance(value, list):
+            text = " ".join(str(item).strip() for item in value if str(item).strip())
+        else:
+            text = str(value).strip()
+        if text:
+            ordered.append((int(match.group(1)), text))
+    ordered.sort(key=lambda item: item[0])
+    return [value for _, value in ordered]
+
+
 def pick_figure(figures: list[str], keywords: tuple[str, ...], used: set[str]) -> str | None:
     for rel_path in figures:
         name = Path(rel_path).name.lower()
@@ -204,6 +223,28 @@ def pick_figure(figures: list[str], keywords: tuple[str, ...], used: set[str]) -
         if rel_path not in used:
             used.add(rel_path)
             return rel_path
+    return None
+
+
+def resolve_explicit_figure(project_dir: Path, figure_paths: list[str], explicit_value: str, used: set[str]) -> str | None:
+    candidate = explicit_value.strip()
+    if not candidate:
+        return None
+    candidate_name = Path(candidate).name
+    for rel_path in figure_paths:
+        if rel_path in used:
+            continue
+        if Path(rel_path).name == candidate_name:
+            used.add(rel_path)
+            return rel_path
+
+    direct_path = project_dir / "assets" / "figures" / candidate
+    if direct_path.exists() and direct_path.suffix.lower() in DISPLAY_EXTS:
+        target = project_dir / "poster" / "figures" / direct_path.name
+        shutil.copy2(direct_path, target)
+        rel_path = str(target.relative_to(project_dir / "poster"))
+        used.add(rel_path)
+        return rel_path
     return None
 
 
@@ -264,9 +305,17 @@ def main() -> None:
     code_link = get_value(sections, "Links", "Code link")
     demo_link = get_value(sections, "Links", "Demo or video link")
 
-    overview_fig = pick_figure(figure_paths, ("overview", "method", "architecture", "pipeline", "teaser"), used_figures)
-    results_fig = pick_figure(figure_paths, ("result", "results", "quant", "table"), used_figures)
-    qualitative_fig = pick_figure(figure_paths, ("qual", "example", "demo", "ablation", "error"), used_figures)
+    explicit_figures = explicit_figure_list(sections)
+    overview_fig = resolve_explicit_figure(project_dir, figure_paths, explicit_figures[0], used_figures) if len(explicit_figures) > 0 else None
+    results_fig = resolve_explicit_figure(project_dir, figure_paths, explicit_figures[1], used_figures) if len(explicit_figures) > 1 else None
+    qualitative_fig = resolve_explicit_figure(project_dir, figure_paths, explicit_figures[2], used_figures) if len(explicit_figures) > 2 else None
+
+    if not overview_fig:
+        overview_fig = pick_figure(figure_paths, ("overview", "method", "architecture", "pipeline", "teaser"), used_figures)
+    if not results_fig:
+        results_fig = pick_figure(figure_paths, ("result", "results", "quant", "table"), used_figures)
+    if not qualitative_fig:
+        qualitative_fig = pick_figure(figure_paths, ("qual", "example", "demo", "ablation", "error"), used_figures)
 
     config["cards"]["problem"]["html"] = "".join(
         [
@@ -337,6 +386,7 @@ def main() -> None:
     )
 
     write_editable_poster(project_dir, skill_dir, config)
+    optimize_project(project_dir)
     print(f"Updated poster/index.html and poster/poster-config.json from {brief_path}")
 
 

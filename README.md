@@ -56,6 +56,7 @@ What the sync step now does automatically:
 - copies displayable figures into `poster/figures/`
 - copies user logos into `poster/logos/`
 - generates a live QR image URL from `QR target`
+- runs an image-aware layout optimization pass
 
 It is designed for two use cases:
 
@@ -143,6 +144,8 @@ cvpr-2026-poster/
 │   └── print-checklist.md
 └── scripts/
     ├── init_poster_project.py
+    ├── optimize_poster_layout.py
+    ├── poster_image_utils.py
     └── sync_poster_from_brief.py
 ```
 
@@ -300,6 +303,18 @@ Recommended figure filenames for auto-fill:
 
 The sync script looks for these names first when filling the editable poster cards.
 
+You can also explicitly control figure assignment in `poster_brief.md`:
+
+```md
+## Must-have figures
+
+- Figure 1: overview.png
+- Figure 2: results.png
+- Figure 3: qualitative.png
+```
+
+If these are present, the sync script uses them before filename guessing.
+
 ### 3. Fill `poster_brief.md`
 
 At minimum, fill these fields:
@@ -331,6 +346,19 @@ This updates:
 - `poster/index.html`
 - copied user logos under `poster/logos/`
 - copied displayable figures under `poster/figures/`
+- auto-generated QR image URL from `QR target`
+- column widths and figure card heights based on image aspect ratios
+
+### 4.5 Run the optimizer again if you change figures
+
+If you later replace or add images, rerun:
+
+```bash
+python3 cvpr-2026-poster/scripts/optimize_poster_layout.py \
+  --project-dir ./poster-workspace
+```
+
+This is optional because `sync_poster_from_brief.py` already runs the optimizer once.
 
 ### 5. Ask the agent to use the skill
 

@@ -27,7 +27,8 @@ Use the skill in three phases:
 1. Create or organize a poster workspace.
 2. Fill `poster_brief.md` with paper facts, figures, links, style constraints, and institution logos.
 3. Run `scripts/sync_poster_from_brief.py` to seed `poster/index.html` and `poster/poster-config.json`.
-4. Ask the agent to refine the generated poster, not start from scratch.
+4. Let the built-in optimizer adjust the first draft from figure aspect ratios.
+5. Ask the agent to refine the generated poster, not start from scratch.
 
 Typical prompts:
 
@@ -95,6 +96,7 @@ The generated output should include:
 - `poster/logos/` for conference and institution logos
 - `poster/figures/` for copied figures used by the poster
 - a generated QR image URL when `QR target` is present in `poster_brief.md`
+- a first-pass layout optimized from local figure aspect ratios
 
 The bundled HTML editor already supports layout editing. When filling it:
 
@@ -168,6 +170,12 @@ After editing `poster_brief.md`, sync it with:
 
 ```bash
 python3 scripts/sync_poster_from_brief.py --project-dir ./poster-workspace
+```
+
+If the user later changes figures, rerun:
+
+```bash
+python3 scripts/optimize_poster_layout.py --project-dir ./poster-workspace
 ```
 
 ## Preflight

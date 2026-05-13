@@ -50,6 +50,13 @@
 - Figure 3:
 - Figure 4:
 
+Tip:
+
+- If you already know which files should go into the main figure cards, put the filenames here, for example:
+  - `Figure 1: overview.png`
+  - `Figure 2: results.png`
+  - `Figure 3: qualitative.png`
+
 ## Tables and metrics
 
 - Main table source:
