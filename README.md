@@ -34,7 +34,7 @@ into your agent's skill location (depends on the tool).
 That's it. Examples:
 
 > Use cvpr-2026-poster to build a poster from my Overleaf folder at
-> `/Users/me/papers/sat-rrg/`. Auto-fetch institution logos.
+> `/path/to/your/overleaf-folder/`. Auto-fetch institution logos.
 
 > Use cvpr-2026-poster to refine the generated poster — make the
 > method card use a side-by-side figure/text layout and shrink the
