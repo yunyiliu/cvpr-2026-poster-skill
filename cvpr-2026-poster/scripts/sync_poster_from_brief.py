@@ -308,9 +308,12 @@ def main() -> None:
     config["affiliations"] = get_value(sections, "Paper", "Affiliations") or config.get("affiliations", "")
     config["badge"] = badge_for_track(track)
 
-    official_logos = [logo for logo in config.get("logos", []) if "official/" in logo.get("src", "")]
+    existing_conference = config.get("conferenceLogos") or [
+        logo for logo in config.get("logos", []) if "official/" in logo.get("src", "")
+    ]
+    config["conferenceLogos"] = existing_conference
     user_logos = [{"src": rel_path, "alt": Path(rel_path).stem} for rel_path in user_logo_paths]
-    config["logos"] = user_logos + official_logos
+    config["logos"] = user_logos
 
     qr_target = get_value(sections, "Links", "QR target")
     if qr_target:

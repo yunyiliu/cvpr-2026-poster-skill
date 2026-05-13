@@ -209,7 +209,8 @@ def build_editable_poster_config(args: argparse.Namespace, spec: dict[str, str],
             {"id": "col3", "widthMm": 300, "cards": ["table", "conclusion"]},
         ]
 
-    logos = [{"src": path, "alt": "CVPR 2026"} for path in logo_paths]
+    conference_logos = [{"src": path, "alt": "CVPR 2026"} for path in logo_paths]
+    logos: list[dict] = []
     qr_src = ""
     title = args.title or "CVPR 2026 Poster Title"
 
@@ -296,6 +297,7 @@ def build_editable_poster_config(args: argparse.Namespace, spec: dict[str, str],
         "badge": badge,
         "qr": {"src": qr_src, "label": "Paper / Project"},
         "logos": logos,
+        "conferenceLogos": conference_logos,
         "columns": columns,
         "cards": cards,
     }

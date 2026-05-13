@@ -96,64 +96,85 @@
     color: #fff;
     padding: 14mm var(--pad) 12mm;
     display: grid;
-    grid-template-columns: 1fr auto auto;
+    grid-template-columns: auto 1fr auto;
     align-items: center;
     gap: 12mm;
   }
+  .header-center {
+    text-align: center;
+    min-width: 0;
+  }
   .title {
-    font-size: calc(30pt * var(--font-scale));
+    font-size: calc(56pt * var(--font-scale));
     line-height: 1.06;
     font-weight: 850;
-    margin: 0 0 4mm;
+    margin: 0 0 5mm;
   }
   .meta {
-    font-size: calc(14pt * var(--font-scale));
-    line-height: 1.35;
-    opacity: 0.95;
+    font-size: calc(24pt * var(--font-scale));
+    line-height: 1.32;
+    opacity: 0.96;
     white-space: pre-line;
+    margin-bottom: 1.5mm;
   }
   .badge {
-    align-self: start;
-    padding: 3mm 6mm;
+    display: inline-block;
+    margin-top: 4mm;
+    padding: 3mm 7mm;
     border-radius: 999px;
-    border: 1.2mm solid rgba(255, 255, 255, 0.35);
-    font-size: calc(13pt * var(--font-scale));
+    border: 1.2mm solid rgba(255, 255, 255, 0.4);
+    font-size: calc(20pt * var(--font-scale));
     font-weight: 800;
     white-space: nowrap;
   }
-  .header-right {
+  .logos-left,
+  .logos-right {
     display: flex;
     align-items: center;
+    gap: 6mm;
+  }
+  .logos-left { justify-content: flex-start; }
+  .logos-right {
+    justify-content: flex-end;
     gap: 8mm;
   }
-  .logos {
+  .logos-left .logo-pill,
+  .logos-right .logo-pill {
+    background: #ffffff;
+    border-radius: 4mm;
+    padding: 4mm 6mm;
     display: flex;
     align-items: center;
-    gap: 5mm;
-    flex-wrap: wrap;
-    justify-content: flex-end;
+    justify-content: center;
+    box-shadow: 0 2mm 6mm rgba(0, 0, 0, 0.18);
   }
-  .logos img {
-    max-height: 32mm;
+  .logos-left img {
+    max-height: 38mm;
+    max-width: 90mm;
     object-fit: contain;
-    filter: brightness(0) invert(1);
+  }
+  .logos-right img {
+    max-height: 50mm;
+    max-width: 130mm;
+    object-fit: contain;
   }
   .qr-block {
     text-align: center;
+    margin-left: 4mm;
   }
   .qr-block img {
-    width: 28mm;
-    height: 28mm;
+    width: 38mm;
+    height: 38mm;
     object-fit: cover;
     border-radius: 2mm;
     background: #fff;
-    padding: 1mm;
+    padding: 1.5mm;
   }
   .qr-label {
-    margin-top: 1mm;
-    font-size: calc(7.5pt * var(--font-scale));
+    margin-top: 1.5mm;
+    font-size: calc(14pt * var(--font-scale));
     font-weight: 700;
-    color: rgba(255, 255, 255, 0.92);
+    color: rgba(255, 255, 255, 0.95);
   }
 
   .poster-area {
@@ -210,21 +231,21 @@
   .card.flex-grow { flex: 1 1 0; }
   .card.fixed-height { flex: 0 0 auto; }
   .card h2 {
-    margin: 0 0 3mm;
-    font-size: calc(16pt * var(--font-scale));
+    margin: 0 0 4mm;
+    font-size: calc(32pt * var(--font-scale));
     line-height: 1.1;
     font-weight: 850;
     color: var(--card-accent, #1b5da2);
   }
   .card-body {
     min-height: 0;
-    font-size: calc(10pt * var(--font-scale));
+    font-size: calc(22pt * var(--font-scale));
     line-height: 1.35;
     color: var(--text);
   }
-  .card-body p { margin: 0 0 2.5mm; }
-  .card-body ul { margin: 0; padding-left: 5mm; }
-  .card-body li { margin: 0 0 1.8mm; }
+  .card-body p { margin: 0 0 4mm; }
+  .card-body ul { margin: 0; padding-left: 8mm; }
+  .card-body li { margin: 0 0 3mm; }
   .card-body img {
     max-width: 100%;
     max-height: 100%;
@@ -235,7 +256,7 @@
   .card-body table {
     width: 100%;
     border-collapse: collapse;
-    font-size: calc(9pt * var(--font-scale));
+    font-size: calc(18pt * var(--font-scale));
   }
   .card-body th,
   .card-body td {
@@ -325,7 +346,7 @@
     overflow: hidden;
   }
   .fig-cap {
-    font-size: calc(8pt * var(--font-scale));
+    font-size: calc(16pt * var(--font-scale));
     color: var(--muted);
   }
 </style>
@@ -410,29 +431,41 @@ function fitPosterToViewport() {
 function renderHeader(root) {
   const header = document.createElement("div");
   header.className = "header";
-  const left = document.createElement("div");
-  left.innerHTML = `
-    <div class="title">${state.title}</div>
-    <div class="meta">${state.authors}</div>
-    <div class="meta">${state.affiliations}</div>
-  `;
-  const badge = document.createElement("div");
-  badge.className = "badge";
-  badge.textContent = state.badge;
 
-  const right = document.createElement("div");
-  right.className = "header-right";
-
-  const logos = document.createElement("div");
-  logos.className = "logos";
-  state.logos.forEach((logo) => {
+  const leftLogos = document.createElement("div");
+  leftLogos.className = "logos-left";
+  (state.logos || []).forEach((logo) => {
+    if (!logo || !logo.src) return;
+    const pill = document.createElement("div");
+    pill.className = "logo-pill";
     const img = document.createElement("img");
     img.src = logo.src;
     img.alt = logo.alt || "logo";
-    logos.appendChild(img);
+    pill.appendChild(img);
+    leftLogos.appendChild(pill);
   });
-  right.appendChild(logos);
 
+  const center = document.createElement("div");
+  center.className = "header-center";
+  center.innerHTML = `
+    <div class="title">${state.title}</div>
+    <div class="meta">${state.authors}</div>
+    <div class="meta">${state.affiliations}</div>
+    <div class="badge">${state.badge}</div>
+  `;
+
+  const right = document.createElement("div");
+  right.className = "logos-right";
+  (state.conferenceLogos || []).forEach((logo) => {
+    if (!logo || !logo.src) return;
+    const pill = document.createElement("div");
+    pill.className = "logo-pill";
+    const img = document.createElement("img");
+    img.src = logo.src;
+    img.alt = logo.alt || "CVPR 2026";
+    pill.appendChild(img);
+    right.appendChild(pill);
+  });
   if (state.qr && state.qr.src) {
     const qr = document.createElement("div");
     qr.className = "qr-block";
@@ -440,8 +473,8 @@ function renderHeader(root) {
     right.appendChild(qr);
   }
 
-  header.appendChild(left);
-  header.appendChild(badge);
+  header.appendChild(leftLogos);
+  header.appendChild(center);
   header.appendChild(right);
   root.appendChild(header);
 }
@@ -703,6 +736,10 @@ window.posterAPI = {
   },
   setLogos: (logos) => {
     state.logos = normalizeLogos(logos);
+    render();
+  },
+  setConferenceLogos: (logos) => {
+    state.conferenceLogos = normalizeLogos(logos);
     render();
   },
   addLogo: (src, alt) => {
