@@ -865,7 +865,9 @@ document.getElementById("reset-config").addEventListener("click", () => {
 });
 
 window.addEventListener("resize", fitPosterToViewport);
-render();
+// Initial paint must be synchronous: headless Chrome can finish
+// `--print-to-pdf` before a requestAnimationFrame callback fires.
+renderSync();
 </script>
 </body>
 </html>
